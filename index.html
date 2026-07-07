@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#05060f">
+  <title>Singularity Drop — merge matter, birth a black hole</title>
+  <meta name="description" content="Drop celestial bodies into a gravity well. Merge stardust into moons, stars and black holes. One shared Daily Singularity puzzle per day — keep your streak alive.">
+  <meta property="og:title" content="Singularity Drop">
+  <meta property="og:description" content="Merge matter until you birth a black hole. New daily puzzle every day.">
+  <meta property="og:type" content="website">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-score">
+        <div id="score" class="score">0</div>
+        <div id="chain" class="chain hidden"></div>
+      </div>
+      <div class="hud-right">
+        <div id="best" class="best"></div>
+        <div class="next-wrap">
+          <span class="next-label">NEXT</span>
+          <div id="next" class="next-preview">✨</div>
+        </div>
+        <button id="btn-pause" class="icon-btn" aria-label="Pause">II</button>
+      </div>
+    </div>
+    <div id="mode-badge" class="mode-badge hidden"></div>
+  </div>
+
+  <div id="menu" class="overlay">
+    <div class="panel menu-panel">
+      <h1 class="title">Singularity<span class="title-accent">Drop</span></h1>
+      <p id="menu-tagline" class="tagline"></p>
+      <button id="btn-endless" class="btn btn-primary"></button>
+      <button id="btn-daily" class="btn btn-daily">
+        <span id="daily-label"></span>
+        <span id="daily-sub" class="btn-sub"></span>
+      </button>
+      <div class="menu-row">
+        <button id="btn-howto" class="btn btn-ghost"></button>
+        <button id="btn-settings" class="btn btn-ghost"></button>
+      </div>
+      <div id="menu-streak" class="menu-streak"></div>
+    </div>
+  </div>
+
+  <div id="howto" class="overlay hidden">
+    <div class="panel">
+      <h2 id="howto-title"></h2>
+      <div id="howto-body" class="howto-body"></div>
+      <button id="btn-howto-close" class="btn btn-primary"></button>
+    </div>
+  </div>
+
+  <div id="settings" class="overlay hidden">
+    <div class="panel">
+      <h2 id="settings-title"></h2>
+      <div class="setting-row"><span id="lbl-sound"></span><button id="tgl-sound" class="toggle"></button></div>
+      <div class="setting-row"><span id="lbl-music"></span><button id="tgl-music" class="toggle"></button></div>
+      <div class="setting-row"><span id="lbl-haptics"></span><button id="tgl-haptics" class="toggle"></button></div>
+      <button id="btn-settings-close" class="btn btn-primary"></button>
+      <p class="settings-version">v<span id="version"></span></p>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay hidden">
+    <div class="panel">
+      <h2 id="pause-title"></h2>
+      <button id="btn-resume" class="btn btn-primary"></button>
+      <button id="btn-quit" class="btn btn-ghost"></button>
+    </div>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <div class="panel">
+      <h2 id="go-title"></h2>
+      <div id="go-newbest" class="newbest hidden"></div>
+      <div class="go-score"><span id="go-score">0</span></div>
+      <div id="go-stats" class="go-stats"></div>
+      <div id="go-daily" class="go-daily hidden">
+        <div id="go-daily-summary"></div>
+        <div id="go-streak" class="go-streak"></div>
+        <button id="btn-share" class="btn btn-share"></button>
+        <button id="btn-double" class="btn btn-reward hidden"></button>
+        <div id="go-countdown" class="go-countdown"></div>
+      </div>
+      <button id="btn-revive" class="btn btn-reward hidden"></button>
+      <button id="btn-restart" class="btn btn-primary"></button>
+      <button id="btn-gomenu" class="btn btn-ghost"></button>
+    </div>
+  </div>
+
+  <div id="adstub" class="overlay hidden">
+    <div class="panel adstub-panel">
+      <div class="adstub-label">AD</div>
+      <div id="adstub-text"></div>
+      <div class="adstub-bar"><div id="adstub-progress"></div></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
