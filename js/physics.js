@@ -27,6 +27,10 @@ export class Body {
     this.dead = false;
     this.eaten = 0;        // 0..1 shrink progress while being consumed by a black hole
     this.eatenBy = undefined; // id of the black hole consuming this body
+    // Cosmetic-only seed: drives the sprite variant, blink phase and texture
+    // detail. Derived from the body id, wholly independent of the gameplay
+    // RNG, and never fed back into physics — so the daily stays deterministic.
+    this.cosmeticSeed = (Math.imul(this.id, 2654435761) ^ 0x9e3779b9) >>> 0;
   }
 
   get vx() { return this.x - this.px; }

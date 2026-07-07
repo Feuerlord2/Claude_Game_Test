@@ -1,6 +1,6 @@
 // All tuning constants live here. World units: arena radius = 100.
 
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 
 export const WORLD = {
   R: 100,            // arena radius (launcher orbit)
@@ -46,18 +46,25 @@ export const RULES = {
 // Neutron star is intentionally SMALL and dense (stellar collapse!) —
 // merging two red giants relieves board pressure as a reward.
 // Sizes tuned against DANGER_R so a run overfills after ~50-60 drops.
+//
+// Cosmetic-only fields (never touch physics / gameplay RNG):
+//   shape    — silhouette archetype the renderer dispatches on
+//   family   — material family for coherent shading
+//   face     — expression archetype ('grumpy' rocks, 'excited' comet, …)
+//   faceScale— face size relative to body (small bodies = cuter/bigger face)
+//   variants — number of per-body cosmetic variants baked (bounded cache)
 export const TIERS = [
-  { id: 'stardust',    r: 5.2,  density: 1.0, color: '#fff3b0', glow: '#ffe27a', score: 0,    emoji: '✨' },
-  { id: 'meteoroid',   r: 6.9,  density: 1.0, color: '#c9a27e', glow: '#e0b98f', score: 10,   emoji: '☄️' },
-  { id: 'asteroid',    r: 9.0,  density: 1.0, color: '#9aa3ad', glow: '#b8c2cc', score: 20,   emoji: '🪨' },
-  { id: 'comet',       r: 11.6, density: 1.0, color: '#7fd8ef', glow: '#5fc8e8', score: 35,   emoji: '🌠' },
-  { id: 'moon',        r: 14.9, density: 1.0, color: '#e8e4da', glow: '#cfc9bc', score: 55,   emoji: '🌙' },
-  { id: 'planet',      r: 18.9, density: 1.0, color: '#5fb2f2', glow: '#4fa2e2', score: 90,   emoji: '🌍' },
-  { id: 'gasgiant',    r: 23.6, density: 1.0, color: '#f2a65e', glow: '#e8934f', score: 145,  emoji: '🪐' },
-  { id: 'star',        r: 29.0, density: 1.0, color: '#ffd75e', glow: '#ffc72e', score: 235,  emoji: '⭐' },
-  { id: 'redgiant',    r: 34.7, density: 1.0, color: '#ff7a5c', glow: '#ff5b3a', score: 380,  emoji: '🔴' },
-  { id: 'neutron',     r: 17.7, density: 6.0, color: '#cdbfff', glow: '#b49cff', score: 615,  emoji: '🌟' },
-  { id: 'blackhole',   r: 20.0, density: 9.0, color: '#14101f', glow: '#ff9a3c', score: 1000, emoji: '⚫' },
+  { id: 'stardust',  r: 5.2,  density: 1.0, color: '#fff3b0', glow: '#ffe27a', score: 0,    emoji: '✨', shape: 'mote',   family: 'dust',   face: 'excited', faceScale: 1.2,  variants: 3 },
+  { id: 'meteoroid', r: 6.9,  density: 1.0, color: '#b39679', glow: '#e0b98f', score: 10,   emoji: '☄️', shape: 'rock',   family: 'rock',   face: 'grumpy',  faceScale: 1.18, variants: 4 },
+  { id: 'asteroid',  r: 9.0,  density: 1.0, color: '#9299a3', glow: '#b8c2cc', score: 20,   emoji: '🪨', shape: 'rock',   family: 'rock',   face: 'grumpy',  faceScale: 1.1,  variants: 4 },
+  { id: 'comet',     r: 11.6, density: 1.0, color: '#8fdff2', glow: '#5fc8e8', score: 35,   emoji: '🌠', shape: 'ice',    family: 'ice',    face: 'excited', faceScale: 1.05, variants: 3 },
+  { id: 'moon',      r: 14.9, density: 1.0, color: '#e2ddd0', glow: '#cfc9bc', score: 55,   emoji: '🌙', shape: 'round',  family: 'rock',   face: 'calm',    faceScale: 1.0,  variants: 4 },
+  { id: 'planet',    r: 18.9, density: 1.0, color: '#4ba3ec', glow: '#4fa2e2', score: 90,   emoji: '🌍', shape: 'round',  family: 'terran', face: 'calm',    faceScale: 0.95, variants: 3 },
+  { id: 'gasgiant',  r: 23.6, density: 1.0, color: '#eaa257', glow: '#e8934f', score: 145,  emoji: '🪐', shape: 'ringed', family: 'gas',    face: 'sleepy',  faceScale: 0.85, variants: 3 },
+  { id: 'star',      r: 29.0, density: 1.0, color: '#ffd75e', glow: '#ffc72e', score: 235,  emoji: '⭐', shape: 'star',   family: 'star',   face: 'radiant', faceScale: 0.8,  variants: 2 },
+  { id: 'redgiant',  r: 34.7, density: 1.0, color: '#ff6f4e', glow: '#ff5b3a', score: 380,  emoji: '🔴', shape: 'giant',  family: 'star',   face: 'sleepy',  faceScale: 0.7,  variants: 2 },
+  { id: 'neutron',   r: 17.7, density: 6.0, color: '#dfe6ff', glow: '#9fb4ff', score: 615,  emoji: '🌟', shape: 'pulsar', family: 'star',   face: 'radiant', faceScale: 0.95, variants: 1 },
+  { id: 'blackhole', r: 20.0, density: 9.0, color: '#14101f', glow: '#ff9a3c', score: 1000, emoji: '⚫', shape: 'void',   family: 'void',   face: 'hungry',  faceScale: 0.9,  variants: 1 },
 ];
 
 export const BLACKHOLE_TIER = TIERS.length - 1;

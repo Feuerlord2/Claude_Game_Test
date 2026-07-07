@@ -86,3 +86,26 @@ Launch-Readiness) über den kompletten Stand; alle bestätigten Findings umgeset
       twitter:image/mobile-web-app-capable, Pages-Workflow mit enablement,
       Testserver-Polling, i18n-Korrekturen, Doku-Fakten aktualisiert
 - [x] 79/79 E2E-Checks grün
+
+## M9 — Visual-Overhaul (Phase 1: visueller Kern, v1.3.0)
+Externes KI-Feedback: Körper zu generisch/„KI-like" (jeder Tier derselbe
+perfekte Kreis, nur andere Farbe). Phase 1 löst „alles rund" + „gestempelt":
+- [x] Silhouetten-System pro Tier: unregelmäßige Fels-Brocken (klein),
+      saubere gravitations-gerundete Welten (mittel), Silhouette-Brecher
+      (Kometenschweif, Saturn-Ringe, Sternen-Korona, Pulsar-Strahlen,
+      Akkretionsscheibe) — als reine Render-Overlays, Kollision bleibt Kreis
+- [x] Per-Körper-Variation via `cosmeticSeed` (aus Body-id, strikt getrennt
+      vom Gameplay-RNG) → keine zwei Asteroiden/Monde gleich; Cache bounded
+      über wenige gebackene Varianten pro Tier
+- [x] Eine konsistente Lichtquelle (oben-links): Kugel-Shading + Rim-Light,
+      eine Tiefenebene — Kawaii-Charme bleibt
+- [x] Material/Textur pro Familie (Krater/Speckle/Bänder/Granulation/Eis),
+      leichter Outline-Wobble gegen den Maschinen-perfekt-Look
+- [x] Gesichter pro Archetyp (grimmig/aufgeregt/verschlafen/strahlend/ruhig/
+      hungrig) + proportionale Größe (kleine Körper = größeres Gesicht)
+- [x] Tiefen-Starfield + Nebel im Hintergrund
+- [x] Alle neuen Animationen mit `prefers-reduced-motion`-Fallback (verifiziert)
+- [x] Daily-Determinismus, Performance (79/79 E2E, Perf-Check grün) intakt
+- [ ] Phase 2: Hintergrund/Komposition (Ultrawide), Onboarding, Accessibility
+- [ ] Phase 3: Kosmetische Meta-Progression, Share-Grid-Redesign
+- [ ] Phase 4: Gravitations-Puls, Modifikatoren, Freundes-Duell
