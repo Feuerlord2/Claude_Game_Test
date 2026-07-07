@@ -2,6 +2,7 @@
 
 import { VERSION, TIERS, BLACKHOLE_TIER, PHYSICS } from './config.js';
 import { Game } from './game.js';
+import { Body } from './physics.js';
 import { Renderer } from './render.js';
 import { Particles } from './particles.js';
 import { AudioEngine } from './audio.js';
@@ -480,6 +481,13 @@ if (TEST) {
     showMenu,
     drop: (angle) => game.drop(angle),
     setNow: (ts) => Daily.setNowProvider(() => ts),
+    // Spawn an arbitrary body directly (e.g. two neutron stars -> black hole).
+    spawn: (tier, x, y) => {
+      const spec = TIERS[tier];
+      const b = new Body(x, y, tier, spec.r, spec.density);
+      game.physics.add(b);
+      return b.id;
+    },
     // Advance the simulation deterministically without waiting for rAF.
     stepFrames: (n) => {
       for (let i = 0; i < n; i++) {

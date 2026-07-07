@@ -52,6 +52,29 @@ export function recordProgress(score, bestTier) {
   Storage.set('daily', s);
 }
 
+function updateStreakForDay(day) {
+  const streak = getStreak();
+  if (streak.lastDay >= day) return streak; // already counted (or clock went backwards)
+  const gap = day - streak.lastDay - 1;
+  if (streak.lastDay < -100 || streak.count === 0) {
+    streak.count = 1;
+  } else if (gap === 0) {
+    streak.count++;
+  } else if (gap > 0 && streak.shields >= gap) {
+    streak.shields -= gap;
+    streak.count++;
+  } else {
+    streak.count = 1;
+  }
+  streak.lastDay = day;
+  if (streak.count > streak.longest) streak.longest = streak.count;
+  if (streak.count > 0 && streak.count % DAILY.SHIELD_EVERY === 0) {
+    streak.shields = Math.min(DAILY.SHIELD_MAX, streak.shields + 1);
+  }
+  Storage.set('streak', streak);
+  return streak;
+}
+
 // Finalize today's official run and update the streak. Returns {state, streak}.
 export function finalizeRun(score, bestTier) {
   const day = dayNumber();
@@ -63,35 +86,18 @@ export function finalizeRun(score, bestTier) {
   s.score = Math.max(s.score, score);
   s.bestTier = Math.max(s.bestTier, bestTier);
   Storage.set('daily', s);
-
-  const streak = getStreak();
-  if (streak.lastDay !== day) {
-    const gap = day - streak.lastDay - 1;
-    if (streak.lastDay < -100 || streak.count === 0) {
-      streak.count = 1;
-    } else if (gap === 0) {
-      streak.count++;
-    } else if (gap > 0 && streak.shields >= gap) {
-      streak.shields -= gap;
-      streak.count++;
-    } else {
-      streak.count = 1;
-    }
-    streak.lastDay = day;
-    if (streak.count > streak.longest) streak.longest = streak.count;
-    if (streak.count > 0 && streak.count % DAILY.SHIELD_EVERY === 0) {
-      streak.shields = Math.min(DAILY.SHIELD_MAX, streak.shields + 1);
-    }
-    Storage.set('streak', streak);
-  }
-  return { state: s, streak };
+  return { state: s, streak: updateStreakForDay(day) };
 }
 
-// If the page was closed mid-official-run, count the recorded progress now.
+// If the page was closed mid-official-run, count the recorded progress now —
+// even when that run happened on an earlier day (played at 23:58, reopened
+// after midnight): the attempt still counts for ITS day, keeping the streak.
 export function reconcileAbandonedRun() {
-  const s = getDailyState();
+  const s = Storage.get('daily');
   if (s && s.status === 'inprogress') {
-    finalizeRun(s.score, s.bestTier);
+    s.status = 'done';
+    Storage.set('daily', s);
+    updateStreakForDay(s.day);
   }
 }
 
