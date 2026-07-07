@@ -163,6 +163,28 @@ function updateHudMode() {
   }
 }
 
+// The next-piece preview renders the REAL sprite (with face) instead of a
+// system emoji, so the HUD matches the in-game art on every platform.
+function drawNextPreview(tier) {
+  const nextCanvas = $('next');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const size = 36;
+  if (nextCanvas.width !== size * dpr) {
+    nextCanvas.width = size * dpr;
+    nextCanvas.height = size * dpr;
+  }
+  const nctx = nextCanvas.getContext('2d');
+  nctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  nctx.clearRect(0, 0, size, size);
+  const r = 12;
+  const spr = renderer.sprite(tier, r);
+  const full = spr.offset * 2;
+  const scale = 32 / full;
+  const dw = spr.canvas.width * scale;
+  nctx.drawImage(spr.canvas, (size - dw) / 2, (size - dw) / 2, dw, dw);
+  renderer.drawFace(nctx, size / 2, size / 2, r * scale, 'normal', tier);
+}
+
 let lastScoreShown = -1;
 let lastNextShown = -1;
 let lastChainShown = '';
@@ -172,7 +194,7 @@ function updateHud(force = false) {
     lastScoreShown = game.score;
   }
   if (game.nextTier !== lastNextShown || force) {
-    $('next').textContent = TIERS[game.nextTier].emoji;
+    drawNextPreview(game.nextTier);
     lastNextShown = game.nextTier;
   }
   // Only touch the DOM when the label actually changes — this runs per frame.
@@ -345,6 +367,8 @@ function frame(now) {
   lastTime = now;
 
   if (screen === 'playing') {
+    if (keysHeld.has('ArrowLeft')) game.aimAngle -= 2.4 * dt;
+    if (keysHeld.has('ArrowRight')) game.aimAngle += 2.4 * dt;
     game.update(dt);
     processEvents(game.drainEvents());
     updateHud();
@@ -387,7 +411,14 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 
 canvas.addEventListener('pointermove', (e) => {
-  if (!aiming || screen !== 'playing' || e.pointerId !== activePointerId) return;
+  if (screen !== 'playing') return;
+  // Desktop: the launcher follows the mouse even without a pressed button —
+  // hover-aim, click to drop (portal reviewers test with a mouse).
+  if (!aiming && e.pointerType === 'mouse') {
+    setAimFromEvent(e);
+    return;
+  }
+  if (!aiming || e.pointerId !== activePointerId) return;
   e.preventDefault();
   setAimFromEvent(e);
 });
@@ -415,17 +446,23 @@ canvas.addEventListener('lostpointercapture', (e) => {
   }
 });
 
+// Keyboard: smooth hold-to-rotate (per-keydown stepping stutters with the
+// OS key-repeat delay), space/enter to drop.
+const keysHeld = new Set();
 window.addEventListener('keydown', (e) => {
   if (screen !== 'playing') return;
-  if (e.code === 'ArrowLeft') game.aimAngle -= 0.07;
-  else if (e.code === 'ArrowRight') game.aimAngle += 0.07;
-  else if (e.code === 'Space' || e.code === 'ArrowDown' || e.code === 'Enter') {
+  if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+    keysHeld.add(e.code);
+    e.preventDefault();
+  } else if (e.code === 'Space' || e.code === 'ArrowDown' || e.code === 'Enter') {
     e.preventDefault();
     game.drop(game.aimAngle);
   } else if (e.code === 'Escape') {
     pauseGame();
   }
 });
+window.addEventListener('keyup', (e) => keysHeld.delete(e.code));
+window.addEventListener('blur', () => keysHeld.clear());
 
 // ---------- Buttons ----------
 $('btn-endless').addEventListener('click', () => startGame('endless'));
@@ -598,6 +635,7 @@ if (TEST) {
         particles.update(PHYSICS.DT);
       }
       updateHud();
+      updateDangerBanner();
     },
     state: () => ({
       screen,

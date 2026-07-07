@@ -603,6 +603,10 @@ export class Renderer {
   }
 
   addShake(amount) {
+    if (this.reducedMotion === undefined) {
+      this.reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    if (this.reducedMotion) return;
     this.shake = Math.min(26, this.shake + amount);
   }
 

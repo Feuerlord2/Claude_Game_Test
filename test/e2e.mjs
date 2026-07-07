@@ -146,11 +146,17 @@ try {
       for (let i = 0; i < 250 && !sd.state().over; i++) {
         sd.drop((i % 12) * (Math.PI / 6));
         sd.stepFrames(46);
+        if (!document.getElementById('danger-banner').classList.contains('hidden')) {
+          window.__bannerSeen = true;
+        }
       }
       return sd.state();
     });
     ok('overfilling triggers game over', over.over === true, `drops=${over.dropsMade}`);
     ok('game over overlay shown', await page.isVisible('#gameover'));
+    // The warning banner must have been up during the danger phase.
+    const bannerSeen = await page.evaluate(() => window.__bannerSeen === true);
+    ok('collapse warning banner appeared before game over', bannerSeen);
     ok('revive button offered', await page.isVisible('#btn-revive'));
 
     const beforeRevive = await page.evaluate(() => window.__sd.state().bodies.length);

@@ -1,6 +1,6 @@
 // All tuning constants live here. World units: arena radius = 100.
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 export const WORLD = {
   R: 100,            // arena radius (launcher orbit)
@@ -35,7 +35,8 @@ export const RULES = {
   BLACKHOLE_PULL_RADIUS: 54,  // extra pull radius around a black hole
   BLACKHOLE_EAT_SCORE: 150,
   BLACKHOLE_FINALE_SCORE: 1500,
-  REVIVE_CLEAR_TIERS: 3,      // "Solar Flare" removes tiers 0..2
+  REVIVE_CLEAR_TIERS: 4,      // "Solar Flare" removes tiers 0..3 — an ad-paid
+                              // rescue must clearly relieve the tighter arena
 };
 
 // 11 celestial tiers. radius in world units; mass ~ r^2 * density.
