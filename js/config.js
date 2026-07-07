@@ -5,7 +5,7 @@ export const VERSION = '1.2.0';
 export const WORLD = {
   R: 100,            // arena radius (launcher orbit)
   SPAWN_R: 96,       // spawn distance from center
-  DANGER_R: 74,      // bodies settled beyond this edge distance trigger game over
+  DANGER_R: 78,      // bodies settled beyond this edge distance trigger game over
   CLAMP_R: 112,      // hard position clamp (safety net)
 };
 
