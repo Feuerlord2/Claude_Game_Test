@@ -504,6 +504,9 @@ try {
     const r = await page.evaluate(() => {
       const sd = window.__sd;
       sd.startGame('endless');
+      // Fixed seed: the piece sequence decides whether the pile survives,
+      // and a random one makes this check flaky.
+      sd.game.reset('endless', 424242);
       // Build the pile the way real play does — dropped from the rim at
       // spread angles. Synthetic overlapping spawns explode in the solver
       // and collapse the scene, making the measurement vacuous.
