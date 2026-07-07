@@ -10,41 +10,41 @@ später Google Play via Capacitor.
 Portal-SDKs andockbar, Remove-Ads/Kosmetik-IAP im Store-Build.
 
 ## M1 — Spielbarer Core-Loop
-- [ ] Verlet-Physik: Kreis-Kollisionen, Radial-Gravitation, stabile Haufenbildung
-- [ ] 11-Tier-Merge-Kette (Sternenstaub → Schwarzes Loch) mit Kaskaden + Chain-Multiplikator
-- [ ] Rim-Launcher: Touch-Drag/Maus-Aiming über 360°, Ghost-Vorschau, Next-Piece-Queue
-- [ ] Danger-Ring-Lose-Condition mit Warnphase, Instant-Restart < 1 s
-- [ ] Black-Hole-Finale: konsumiert Umgebung, evaporiert mit Bonus
-- [ ] Verifiziert: Playwright-Autoplay (Merges passieren, keine NaN, Game Over + Restart funktionieren)
+- [x] Verlet-Physik: Kreis-Kollisionen, Radial-Gravitation, stabile Haufenbildung
+- [x] 11-Tier-Merge-Kette (Sternenstaub → Schwarzes Loch) mit Kaskaden + Chain-Multiplikator
+- [x] Rim-Launcher: Touch-Drag/Maus-Aiming über 360°, Ghost-Vorschau, Next-Piece-Queue
+- [x] Danger-Ring-Lose-Condition mit Warnphase, Instant-Restart < 1 s
+- [x] Black-Hole-Finale: konsumiert Umgebung, evaporiert mit Bonus
+- [x] Verifiziert: Playwright-Autoplay (Merges passieren, keine NaN, Game Over + Restart funktionieren)
 
 ## M2 — Juice & Polish
-- [ ] Prozedurale Tier-Sprites (Gradient + Glow, gecacht — kein shadowBlur im Frame)
-- [ ] Merge-Partikel, Shockwave-Ringe, Screenshake skaliert mit Tier
-- [ ] WebAudio-Synth: Drop-Pluck, aufsteigende Merge-Töne, Chain-Pitch, Danger-Heartbeat, BH-Boom
-- [ ] Haptik (Vibration API), Starfield-/Nebel-Hintergrund
-- [ ] 60 fps auf Mobile-Klasse-Hardware (DPR-Cap, Sprite-Cache, kein DOM im Game-Loop)
+- [x] Prozedurale Tier-Sprites (Gradient + Glow, gecacht — kein shadowBlur im Frame)
+- [x] Merge-Partikel, Shockwave-Ringe, Screenshake skaliert mit Tier
+- [x] WebAudio-Synth: Drop-Pluck, aufsteigende Merge-Töne, Chain-Pitch, Danger-Heartbeat, BH-Boom
+- [x] Haptik (Vibration API), Starfield-/Nebel-Hintergrund
+- [x] 60 fps auf Mobile-Klasse-Hardware (DPR-Cap, Sprite-Cache, kein DOM im Game-Loop)
 
 ## M3 — Daily Singularity + Streak + Share
-- [ ] Deterministischer Tages-Seed aus UTC-Datum, weltweit identische Piece-Sequenz
-- [ ] Ein gewerteter Versuch/Tag + unbegrenzte Practice-Runs, Countdown zum nächsten Daily
-- [ ] Streak mit Schutzschilden (1 Schild je 7 Tage, max. 2, automatische Einlösung)
-- [ ] Spoiler-freier Emoji-Share-Text (Clipboard + navigator.share) mit Spiel-URL
-- [ ] Verifiziert: gleicher Tag ⇒ gleiche Sequenz, anderer Tag ⇒ andere Sequenz (E2E)
+- [x] Deterministischer Tages-Seed aus UTC-Datum, weltweit identische Piece-Sequenz
+- [x] Ein gewerteter Versuch/Tag + unbegrenzte Practice-Runs, Countdown zum nächsten Daily
+- [x] Streak mit Schutzschilden (1 Schild je 7 Tage, max. 2, automatische Einlösung)
+- [x] Spoiler-freier Emoji-Share-Text (Clipboard + navigator.share) mit Spiel-URL
+- [x] Verifiziert: gleicher Tag ⇒ gleiche Sequenz, anderer Tag ⇒ andere Sequenz (E2E)
 
 ## M4 — Persistenz, PWA, Monetarisierungs-Seams, i18n
-- [ ] localStorage-Persistenz (Bestscore, Daily-Historie, Streak, Settings) mit Fallback
-- [ ] PWA: Manifest, Service Worker (offline-fähig), Icons 192/512 + maskable
-- [ ] Ad-Adapter-Interface: Rewarded-Placements (Revive „Solar Flare“, 2× Daily) als Stub,
+- [x] localStorage-Persistenz (Bestscore, Daily-Historie, Streak, Settings) mit Fallback
+- [x] PWA: Manifest, Service Worker (offline-fähig), Icons 192/512 + maskable
+- [x] Ad-Adapter-Interface: Rewarded-Placements (Revive „Solar Flare“, 2× Daily) als Stub,
       dokumentierte Seams für Poki SDK / CrazyGames SDK / AdMob
-- [ ] UI in Deutsch + Englisch (Auto-Erkennung)
+- [x] UI in Deutsch + Englisch (Auto-Erkennung)
 
 ## M5 — QA
-- [ ] Playwright-E2E auf Mobile-Viewport (Touch): Gameplay, Determinismus, Persistenz,
+- [x] Playwright-E2E auf Mobile-Viewport (Touch): Gameplay, Determinismus, Persistenz,
       Game Over, Revive, Share-Format
-- [ ] Performance-Messung im Autoplay (Frame-Budget)
-- [ ] Adversariales Multi-Agenten-Code-Review, Findings verifiziert und gefixt
+- [x] Performance-Messung im Autoplay (Frame-Budget)
+- [x] Adversariales Multi-Agenten-Code-Review, Findings verifiziert und gefixt
 
 ## M6 — Docs & Launch
-- [ ] README: Setup, Tests, Deployment, Portal-Submission-Playbook, Capacitor-Pfad
-- [ ] Monetarisierungs-Playbook mit konkreten nächsten Schritten
-- [ ] Alles committet und gepusht auf `claude/mobile-game-dev-66vxk6`
+- [x] README: Setup, Tests, Deployment, Portal-Submission-Playbook, Capacitor-Pfad
+- [x] Monetarisierungs-Playbook mit konkreten nächsten Schritten
+- [x] Alles committet und gepusht auf `claude/mobile-game-dev-66vxk6`

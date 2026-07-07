@@ -7,6 +7,12 @@ import { hashString, mulberry32 } from './rng.js';
 
 const GLOW_PAD = 0.9; // glow radius as a fraction of body radius, baked into sprites
 
+// setLineDash copies its input, so shared constants are safe.
+const DASH_DANGER = [6, 8];
+const DASH_AIM = [3, 9];
+const DASH_NONE = [];
+const CHEVRON_OFFS = [-0.09, 0.09];
+
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -20,6 +26,8 @@ export class Renderer {
   }
 
   resize() {
+    // DPR can change at runtime (foldables, monitor moves, browser zoom).
+    this.dpr = Math.min(2, window.devicePixelRatio || 1);
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.w = w;
@@ -32,7 +40,17 @@ export class Renderer {
     this.cy = h * 0.54;
     this.scale = (Math.min(w, h * 0.86) * 0.5 * 0.95) / WORLD.R;
     this.spriteCache.clear();
+    this.bakeWellGradient();
     this.renderBackground();
+  }
+
+  bakeWellGradient() {
+    this.wellR = 26 * this.scale;
+    const g = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.wellR);
+    g.addColorStop(0, 'rgba(127, 107, 255, 0.16)');
+    g.addColorStop(0.5, 'rgba(80, 60, 180, 0.07)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    this.wellGradient = g;
   }
 
   // Screen position -> aim angle around the arena center.
@@ -237,11 +255,11 @@ export class Renderer {
     }
   }
 
-  draw(game, particles, opts = {}) {
+  draw(game, particles, opts = {}, dt = 1 / 60) {
     const ctx = this.ctx;
     const dpr = this.dpr;
-    this.time += 1 / 60;
-    if (this.shake > 0.01) this.shake *= 0.86; else this.shake = 0;
+    this.time += dt;
+    if (this.shake > 0.01) this.shake *= Math.pow(0.86, dt * 60); else this.shake = 0;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.drawImage(this.bg, 0, 0, this.w, this.h);
@@ -282,14 +300,9 @@ export class Renderer {
   }
 
   drawWell(ctx, s) {
-    const R = 26 * s;
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
-    g.addColorStop(0, 'rgba(127, 107, 255, 0.16)');
-    g.addColorStop(0.5, 'rgba(80, 60, 180, 0.07)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
+    ctx.fillStyle = this.wellGradient;
     ctx.beginPath();
-    ctx.arc(0, 0, R, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.wellR, 0, Math.PI * 2);
     ctx.fill();
 
     // Slowly rotating spiral hints
@@ -317,11 +330,11 @@ export class Renderer {
     const alpha = 0.14 + d * 0.5 + pulse * 0.3;
     ctx.strokeStyle = d > 0.02 ? `rgba(255, 84, 112, ${alpha})` : 'rgba(139, 147, 184, 0.22)';
     ctx.lineWidth = 1.5 + d * 3 + pulse * 2;
-    ctx.setLineDash([6, 8]);
+    ctx.setLineDash(DASH_DANGER);
     ctx.beginPath();
     ctx.arc(0, 0, WORLD.DANGER_R * s, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.setLineDash(DASH_NONE);
   }
 
   drawLauncher(ctx, s, game) {
@@ -334,12 +347,12 @@ export class Renderer {
     const ready = game.dropCooldown <= 0;
     ctx.strokeStyle = ready ? 'rgba(232, 236, 255, 0.30)' : 'rgba(139, 147, 184, 0.12)';
     ctx.lineWidth = 1.4;
-    ctx.setLineDash([3, 9]);
+    ctx.setLineDash(DASH_AIM);
     ctx.beginPath();
     ctx.moveTo(lx, ly);
     ctx.lineTo(Math.cos(a) * 20 * s, Math.sin(a) * 20 * s);
     ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.setLineDash(DASH_NONE);
 
     // Current piece sitting on the rim
     const spr = this.sprite(game.currentTier, spec.r * s);
@@ -352,7 +365,7 @@ export class Renderer {
     ctx.lineWidth = 2;
     const ca = Math.cos(a), sa = Math.sin(a);
     const rr = WORLD.R * s + 8;
-    for (const off of [-0.09, 0.09]) {
+    for (const off of CHEVRON_OFFS) {
       ctx.beginPath();
       ctx.arc(0, 0, rr, a + off - 0.03, a + off + 0.03);
       ctx.stroke();

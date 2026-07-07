@@ -55,6 +55,10 @@ class AdsManager {
   constructor(adapter) {
     this.adapter = adapter;
     this.ready = false;
+    this.inGameplay = false;
+    // Set by the game: portals require game audio muted during ad breaks.
+    this.onAdStart = null;
+    this.onAdEnd = null;
   }
 
   async init() {
@@ -72,15 +76,29 @@ class AdsManager {
 
   async showRewarded() {
     if (!this.rewardedAvailable()) return false;
+    try { this.onAdStart?.(); } catch {}
     try {
       return await this.adapter.showRewarded();
     } catch {
       return false;
+    } finally {
+      try { this.onAdEnd?.(); } catch {}
     }
   }
 
-  gameplayStart() { try { this.adapter.gameplayStart(); } catch {} }
-  gameplayStop() { try { this.adapter.gameplayStop(); } catch {} }
+  // Poki/CrazyGames require these strictly paired — make them idempotent so
+  // UI flows (boot menu, pause->quit, gameover->menu) can call them freely.
+  gameplayStart() {
+    if (this.inGameplay) return;
+    this.inGameplay = true;
+    try { this.adapter.gameplayStart(); } catch {}
+  }
+
+  gameplayStop() {
+    if (!this.inGameplay) return;
+    this.inGameplay = false;
+    try { this.adapter.gameplayStop(); } catch {}
+  }
 }
 
 export const Ads = new AdsManager(new StubAdapter());

@@ -31,7 +31,17 @@ export class AudioEngine {
   }
 
   resume() {
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    // iOS Safari reports the non-standard 'interrupted' state after a phone
+    // call/Siri/alarm takes the audio session — cover every non-running state.
+    if (this.ctx && this.ctx.state !== 'running') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  suspend() {
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
   }
 
   setSound(on) { this.soundOn = on; }

@@ -39,8 +39,8 @@ export function hasPlayedToday() {
   return s !== null && s.status === 'done';
 }
 
-export function startOfficialRun() {
-  Storage.set('daily', { day: dayNumber(), status: 'inprogress', score: 0, bestTier: 0, doubled: false });
+export function startOfficialRun(day = dayNumber()) {
+  Storage.set('daily', { day, status: 'inprogress', score: 0, bestTier: 0, doubled: false });
 }
 
 // Called during an official run so an abandoned run still counts.
@@ -75,18 +75,23 @@ function updateStreakForDay(day) {
   return streak;
 }
 
-// Finalize today's official run and update the streak. Returns {state, streak}.
+// Finalize the official run and update the streak. Returns {state, streak}.
+// A run that crosses UTC midnight is credited to the day it STARTED on
+// (matching reconcileAbandonedRun), so the streak holds and the new day's
+// attempt stays available.
 export function finalizeRun(score, bestTier) {
-  const day = dayNumber();
-  let s = getDailyState();
-  if (!s) s = { day, status: 'inprogress', score: 0, bestTier: 0, doubled: false };
-  if (s.status === 'done') return { state: s, streak: getStreak() }; // already counted
-
+  let s = Storage.get('daily');
+  if (s && s.status === 'done' && s.day === dayNumber()) {
+    return { state: s, streak: getStreak() }; // already counted today
+  }
+  if (!s || s.status !== 'inprogress') {
+    s = { day: dayNumber(), status: 'inprogress', score: 0, bestTier: 0, doubled: false };
+  }
   s.status = 'done';
   s.score = Math.max(s.score, score);
   s.bestTier = Math.max(s.bestTier, bestTier);
   Storage.set('daily', s);
-  return { state: s, streak: updateStreakForDay(day) };
+  return { state: s, streak: updateStreakForDay(s.day) };
 }
 
 // If the page was closed mid-official-run, count the recorded progress now —
@@ -102,12 +107,20 @@ export function reconcileAbandonedRun() {
 }
 
 // After a rewarded revive the run continues past the first finalize —
-// let a better final result raise today's recorded score.
+// let a better final result raise today's recorded score. Works after a
+// 2x double too, by comparing against the raw (undoubled) score.
 export function improveScore(score, bestTier) {
   const s = getDailyState();
-  if (!s || s.status !== 'done' || s.doubled) return;
-  if (score > s.score || bestTier > s.bestTier) {
-    s.score = Math.max(s.score, score);
+  if (!s || s.status !== 'done') return;
+  const raw = s.doubled ? (s.rawScore ?? Math.floor(s.score / 2)) : s.score;
+  if (score > raw || bestTier > s.bestTier) {
+    const newRaw = Math.max(raw, score);
+    if (s.doubled) {
+      s.rawScore = newRaw;
+      s.score = newRaw * 2;
+    } else {
+      s.score = newRaw;
+    }
     s.bestTier = Math.max(s.bestTier, bestTier);
     Storage.set('daily', s);
   }
@@ -117,6 +130,7 @@ export function applyDouble() {
   const s = getDailyState();
   if (!s || s.status !== 'done' || s.doubled) return null;
   s.doubled = true;
+  s.rawScore = s.score;
   s.score *= 2;
   Storage.set('daily', s);
   return s;

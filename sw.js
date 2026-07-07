@@ -30,16 +30,19 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
-      .then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+      // cache:'reload' bypasses the HTTP cache — otherwise hosts with max-age
+      // (GitHub Pages: 600s) can populate a new CACHE_VERSION with stale bytes,
+      // pinning users to a broken mixed deploy forever.
+      .then((cache) => cache.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' }))))
   );
 });
 
+// No skipWaiting/clients.claim: the new version activates only once all pages
+// using the old one are closed, so a loading page never mixes two versions.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
   );
 });
 

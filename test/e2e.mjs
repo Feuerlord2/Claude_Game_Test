@@ -197,6 +197,7 @@ try {
         bhExisted: bhExists,
         afterBodies: after.bodies.length,
         bhGone: !after.bodies.some((b) => b.tier === 10),
+        noStranded: after.bodies.every((b) => b.eaten === 0),
         scoreBefore: before.score,
         scoreAfter: after.score,
         bestTier: after.bestTier,
@@ -204,6 +205,7 @@ try {
     });
     ok('two neutron stars merged into a black hole', r.bhExisted);
     ok('black hole evaporated after feeding', r.bhGone);
+    ok('no stranded half-eaten bodies after finale', r.noStranded);
     ok('black hole consumed nearby debris', r.afterBodies < r.beforeBodies + 2, `before=${r.beforeBodies} after=${r.afterBodies}`);
     ok('finale awarded big score', r.scoreAfter >= r.scoreBefore + 1500, `${r.scoreBefore} -> ${r.scoreAfter}`);
     ok('bestTier reached black hole', r.bestTier === 10);
@@ -321,6 +323,53 @@ try {
     ok('shield saves a missed day', r.afterSkip.count === 8 && r.afterSkip.shields === 0, JSON.stringify(r.afterSkip));
     ok('big gap without shields resets streak', r.afterBigGap.count === 1, JSON.stringify(r.afterBigGap));
     ok('longest streak preserved', r.afterBigGap.longest === 8, JSON.stringify(r.afterBigGap));
+    await ctx.close();
+  }
+
+  // ---------------- 8b. Midnight-crossing edge cases ----------------
+  {
+    console.log('midnight edge cases');
+    const ctx = await mobileContext();
+    const page = await newPage(ctx);
+    const r = await page.evaluate((ts) => {
+      const sd = window.__sd;
+      const day = 86400000;
+      const out = {};
+
+      // A run that starts on day N and finalizes after midnight is credited
+      // to day N, and day N+1's attempt stays available.
+      sd.setNow(ts);
+      sd.daily.startOfficialRun();
+      sd.setNow(ts + day);
+      const fin = sd.daily.finalizeRun(1234, 6);
+      out.creditedDay = fin.state.day;
+      out.streakAfterCross = sd.daily.getStreak();
+      out.nextDayFree = sd.daily.getDailyState() === null; // new day not consumed
+
+      // Double, then a better post-revive result must still improve the score.
+      sd.daily.startOfficialRun();
+      sd.daily.finalizeRun(1000, 5);
+      sd.daily.applyDouble();
+      sd.daily.improveScore(3000, 7);
+      out.afterImprove = sd.daily.getDailyState();
+
+      // Stale inprogress from yesterday + startGame today: yesterday counts,
+      // today is still official.
+      sd.setNow(ts + 3 * day);
+      localStorage.setItem('sd1:daily', JSON.stringify({ day: sd.daily.dayNumber(), status: 'inprogress', score: 50, bestTier: 2, doubled: false }));
+      sd.setNow(ts + 4 * day);
+      sd.startGame('daily');
+      out.staleOfficial = sd.state().officialDaily;
+      out.staleStreak = sd.daily.getStreak();
+      return out;
+    }, FAKE_NOW);
+    ok('midnight-crossing run credited to its start day', r.creditedDay === FAKE_DAY, `day=${r.creditedDay}`);
+    ok('streak counted for the start day', r.streakAfterCross.lastDay === FAKE_DAY, JSON.stringify(r.streakAfterCross));
+    ok('next day attempt not consumed', r.nextDayFree === true);
+    ok('improveScore works after double (raw comparison)', r.afterImprove.score === 6000 && r.afterImprove.rawScore === 3000 && r.afterImprove.bestTier === 7, JSON.stringify(r.afterImprove));
+    ok('stale inprogress run: today still official', r.staleOfficial === true);
+    ok('stale inprogress run: yesterday counted for streak', r.staleStreak.lastDay >= FAKE_DAY + 3, JSON.stringify(r.staleStreak));
+    ok('no console errors', page.errors.length === 0, page.errors.join('; '));
     await ctx.close();
   }
 

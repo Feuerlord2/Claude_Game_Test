@@ -26,6 +26,7 @@ export class Body {
     this.spinV = (Math.random() - 0.5) * 0.6;
     this.dead = false;
     this.eaten = 0;        // 0..1 shrink progress while being consumed by a black hole
+    this.eatenBy = undefined; // id of the black hole consuming this body
   }
 
   get vx() { return this.x - this.px; }
@@ -118,6 +119,9 @@ export class Physics {
 
           const overlap = rSum - dist;
           if (overlap <= 0.02) continue;
+          // Devoured bodies are non-colliding — resolving these pairs would
+          // kick the black hole away from its meal.
+          if (a.eaten > 0 || b.eaten > 0) continue;
 
           a.hadContact = true;
           b.hadContact = true;

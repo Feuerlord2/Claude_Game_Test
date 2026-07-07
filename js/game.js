@@ -168,14 +168,24 @@ export class Game {
       const alive = this.time - bh.bhBirth;
 
       if (alive <= RULES.BLACKHOLE_FEED_TIME) {
-        // Consume anything overlapping the event horizon.
+        // Consume anything overlapping the event horizon. Each victim is
+        // bound to ONE hole via eatenBy so two concurrent holes can neither
+        // double the eat rate nor double-award the score.
         for (const b of this.physics.bodies) {
           if (b === bh || b.tier === BLACKHOLE_TIER || b.dead) continue;
+          if (b.eatenBy !== undefined && b.eatenBy !== bh.id) continue;
           const d = Math.hypot(bh.x - b.x, bh.y - b.y);
-          if (b.eaten > 0 || d < bh.r + b.r * 0.35) {
+          if (b.eatenBy === bh.id || d < bh.r + b.r * 0.35) {
+            b.eatenBy = bh.id;
             b.eaten += dt * 2.6;
-            b.invMass = 0.0001; // pinned while being devoured
+            // Devoured bodies stop colliding (see physics.js); pull them
+            // into the horizon and kill their velocity so they sink cleanly.
+            b.x += (bh.x - b.x) * Math.min(1, dt * 5);
+            b.y += (bh.y - b.y) * Math.min(1, dt * 5);
+            b.px = b.x;
+            b.py = b.y;
             if (b.eaten >= 1) {
+              b.dead = true; // claim now — no other hole may re-award this step
               toRemove.push(b);
               bh.bhFed++;
               this.score += RULES.BLACKHOLE_EAT_SCORE;
@@ -188,9 +198,15 @@ export class Game {
         toRemove.push(bh);
         this.score += RULES.BLACKHOLE_FINALE_SCORE;
         this.events.push({ type: 'bh-finale', x: bh.x, y: bh.y, fed: bh.bhFed, points: RULES.BLACKHOLE_FINALE_SCORE });
-        // Gentle outward shove so the remaining pile breathes.
         for (const b of this.physics.bodies) {
           if (b === bh) continue;
+          // Release half-eaten victims — otherwise they stay shrunken,
+          // unmergeable and exempt from the lose condition forever.
+          if (b.eatenBy === bh.id) {
+            b.eatenBy = undefined;
+            b.eaten = 0;
+          }
+          // Gentle outward shove so the remaining pile breathes.
           const dx = b.x - bh.x;
           const dy = b.y - bh.y;
           const d = Math.hypot(dx, dy) || 1;
@@ -244,13 +260,19 @@ export class Game {
     for (const b of this.physics.bodies) b.dangerTime = 0;
     this.over = false;
     this.dangerLevel = 0;
+    // Sim time froze while over — an old chain must not survive the ad break.
+    this.chain = 0;
+    this.chainTimer = 0;
     this.events.push({ type: 'revive', cleared });
     return true;
   }
 
   drainEvents() {
-    const evs = this.events.slice();
+    // Double-buffer instead of slice: no per-frame allocation.
+    const evs = this.events;
+    this.events = this._spareEvents || [];
     this.events.length = 0;
+    this._spareEvents = evs;
     return evs;
   }
 }

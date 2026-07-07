@@ -36,6 +36,10 @@ audio.setSound(settings.sound);
 audio.setMusic(settings.music);
 Haptics.enabled = settings.haptics;
 
+// Portals require game audio muted during ad breaks.
+Ads.onAdStart = () => audio.suspend();
+Ads.onAdEnd = () => audio.resume();
+
 function saveSettings() {
   Storage.set('settings', settings);
 }
@@ -45,6 +49,7 @@ let screen = 'menu';           // menu | playing | paused | gameover
 let runMode = 'endless';       // endless | daily
 let officialDaily = false;
 let finalizedThisRun = false;
+let dailyRunDay = 0;           // the UTC day this daily run belongs to
 let lastTime = performance.now();
 
 // ---------- Static UI text ----------
@@ -124,10 +129,16 @@ function startGame(mode) {
   runMode = mode;
   finalizedThisRun = false;
   if (mode === 'daily') {
+    // Finalize any abandoned attempt for ITS day first (e.g. quit-to-menu
+    // yesterday in a never-reloaded PWA session) so it is not destroyed.
+    Daily.reconcileAbandonedRun();
+    // Compute the day ONCE so state, seed and badge cannot straddle midnight.
+    const day = Daily.dayNumber();
+    dailyRunDay = day;
     const state = Daily.getDailyState();
     officialDaily = !state; // first run today is the scored one
-    if (officialDaily) Daily.startOfficialRun();
-    game.reset('daily', Daily.seedForDay(Daily.dayNumber()));
+    if (officialDaily) Daily.startOfficialRun(day);
+    game.reset('daily', Daily.seedForDay(day));
   } else {
     officialDaily = false;
     game.reset('endless', Math.floor(Math.random() * 0xffffffff));
@@ -145,7 +156,7 @@ function startGame(mode) {
 function updateHudMode() {
   const badge = $('mode-badge');
   if (runMode === 'daily') {
-    badge.textContent = officialDaily ? `${t('mode_daily')} #${Daily.dayNumber()}` : t('mode_practice');
+    badge.textContent = officialDaily ? `${t('mode_daily')} #${dailyRunDay}` : t('mode_practice');
     show('mode-badge');
   } else {
     hide('mode-badge');
@@ -154,6 +165,7 @@ function updateHudMode() {
 
 let lastScoreShown = -1;
 let lastNextShown = -1;
+let lastChainShown = '';
 function updateHud(force = false) {
   if (game.score !== lastScoreShown || force) {
     $('score').textContent = game.score.toLocaleString();
@@ -163,12 +175,22 @@ function updateHud(force = false) {
     $('next').textContent = TIERS[game.nextTier].emoji;
     lastNextShown = game.nextTier;
   }
+  // Only touch the DOM when the label actually changes — this runs per frame.
   const chainEl = $('chain');
   if (game.chain >= 2 && game.chainTimer > 0) {
-    chainEl.textContent = `×${game.chainMult().toFixed(2).replace(/\.?0+$/, '')} CHAIN`;
-    chainEl.classList.remove('hidden');
-  } else {
+    const label = `×${game.chainMult().toFixed(2).replace(/\.?0+$/, '')} CHAIN`;
+    if (label !== lastChainShown) {
+      chainEl.textContent = label;
+      chainEl.classList.remove('hidden');
+      // Restart the pop animation on every multiplier change.
+      chainEl.style.animation = 'none';
+      void chainEl.offsetWidth;
+      chainEl.style.animation = '';
+      lastChainShown = label;
+    }
+  } else if (lastChainShown !== '') {
     chainEl.classList.add('hidden');
+    lastChainShown = '';
   }
   if (force) {
     const best = Storage.get('best:endless', 0);
@@ -206,10 +228,17 @@ function handleGameOver(ev) {
       Daily.improveScore(game.score, game.bestTier);
     }
     const state = Daily.getDailyState();
-    const streak = Daily.getStreak();
-    $('go-daily-summary').textContent = t('daily_result', state.score.toLocaleString());
-    $('go-streak').textContent = `${t('streak', streak.count)}${streak.shields > 0 ? '  ' + t('shields', streak.shields) : ''}`;
-    $('btn-double').classList.toggle('hidden', state.doubled || !Ads.rewardedAvailable());
+    if (state) {
+      const streak = Daily.getStreak();
+      $('go-daily-summary').textContent = t('daily_result', state.score.toLocaleString());
+      $('go-streak').textContent = `${t('streak', streak.count)}${streak.shields > 0 ? '  ' + t('shields', streak.shields) : ''}`;
+      $('btn-double').classList.toggle('hidden', state.doubled || !Ads.rewardedAvailable());
+    } else {
+      // A revived run crossed UTC midnight: yesterday's result is locked in.
+      $('go-daily-summary').textContent = t('practice');
+      $('go-streak').textContent = '';
+      hide('btn-double');
+    }
     updateCountdown();
     show('go-daily');
   } else if (runMode === 'daily') {
@@ -233,7 +262,11 @@ function updateCountdown() {
   $('go-countdown').textContent = t('next_daily', h, m);
 }
 setInterval(() => {
-  if (screen === 'gameover' && runMode === 'daily') updateCountdown();
+  if (screen === 'gameover' && runMode === 'daily') {
+    updateCountdown();
+    // Past UTC midnight the recorded day expires — retire the stale button.
+    if (!Daily.getDailyState()) hide('btn-double');
+  }
 }, 30000);
 
 // ---------- Game events -> fx ----------
@@ -287,6 +320,7 @@ function processEvents(events) {
 
 // ---------- Main loop ----------
 let dangerTick = 0;
+let lastDraw = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - lastTime) / 1000);
   lastTime = now;
@@ -302,12 +336,21 @@ function frame(now) {
     }
   }
   particles.update(dt);
-  renderer.draw(game, particles, { hideLauncher: screen !== 'playing' });
+  // Behind an overlay (menu/pause/gameover) throttle rendering to ~5 fps —
+  // the canvas animation is cosmetic there and full-rate redraws just burn
+  // battery on phones sitting on a menu.
+  if (screen === 'playing' || now - lastDraw >= 200) {
+    renderer.draw(game, particles, { hideLauncher: screen !== 'playing' }, dt);
+    lastDraw = now;
+  }
   requestAnimationFrame(frame);
 }
 
 // ---------- Input ----------
+// One pointer owns the aim: extra fingers (palm grazes, second thumb) must
+// neither hijack the angle nor fire phantom drops on lift.
 let aiming = false;
+let activePointerId = null;
 
 function setAimFromEvent(e) {
   game.aimAngle = renderer.angleFromScreen(e.clientX, e.clientY);
@@ -315,19 +358,23 @@ function setAimFromEvent(e) {
 
 canvas.addEventListener('pointerdown', (e) => {
   if (screen !== 'playing') return;
+  if (activePointerId !== null && e.pointerId !== activePointerId) return;
   e.preventDefault();
+  activePointerId = e.pointerId;
   aiming = true;
   try { canvas.setPointerCapture(e.pointerId); } catch {}
   setAimFromEvent(e);
 });
 
 canvas.addEventListener('pointermove', (e) => {
-  if (!aiming || screen !== 'playing') return;
+  if (!aiming || screen !== 'playing' || e.pointerId !== activePointerId) return;
   e.preventDefault();
   setAimFromEvent(e);
 });
 
 canvas.addEventListener('pointerup', (e) => {
+  if (e.pointerId !== activePointerId) return;
+  activePointerId = null;
   if (!aiming || screen !== 'playing') { aiming = false; return; }
   e.preventDefault();
   aiming = false;
@@ -335,7 +382,18 @@ canvas.addEventListener('pointerup', (e) => {
   game.drop(game.aimAngle);
 });
 
-canvas.addEventListener('pointercancel', () => { aiming = false; });
+canvas.addEventListener('pointercancel', (e) => {
+  if (e.pointerId !== activePointerId) return;
+  activePointerId = null;
+  aiming = false;
+});
+
+canvas.addEventListener('lostpointercapture', (e) => {
+  if (e.pointerId === activePointerId) {
+    activePointerId = null;
+    aiming = false;
+  }
+});
 
 window.addEventListener('keydown', (e) => {
   if (screen !== 'playing') return;
@@ -408,6 +466,13 @@ $('btn-revive').addEventListener('click', async () => {
 });
 
 $('btn-double').addEventListener('click', async () => {
+  // Check BEFORE consuming the ad: at UTC midnight yesterday's state expires
+  // and the player must not watch an ad for nothing.
+  if (!Daily.getDailyState()) {
+    hide('btn-double');
+    toast(t('daily_expired'));
+    return;
+  }
   const granted = await Ads.showRewarded();
   if (!granted) return;
   const state = Daily.applyDouble();
@@ -415,12 +480,15 @@ $('btn-double').addEventListener('click', async () => {
     $('go-daily-summary').textContent = t('daily_result', state.score.toLocaleString());
     hide('btn-double');
     toast(t('doubled'));
+  } else {
+    hide('btn-double');
+    toast(t('daily_expired'));
   }
 });
 
 $('btn-share').addEventListener('click', async () => {
   const state = Daily.getDailyState();
-  if (!state) return;
+  if (!state) { toast(t('daily_expired')); return; }
   const streak = Daily.getStreak();
   const text = buildShareText(state.day, state.score, state.bestTier, streak.count);
   if (TEST) window.__sd.lastShareText = text;
@@ -439,7 +507,13 @@ window.addEventListener('resize', () => renderer.resize());
 window.addEventListener('orientationchange', () => setTimeout(() => renderer.resize(), 250));
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && screen === 'playing') pauseGame();
+  if (document.hidden) {
+    if (screen === 'playing') pauseGame();
+    // Silence the music pad while hidden — WebAudio is not rAF-throttled.
+    audio.suspend();
+  } else {
+    audio.resume();
+  }
 });
 
 window.addEventListener('pagehide', () => {
@@ -448,10 +522,16 @@ window.addEventListener('pagehide', () => {
   }
 });
 
-document.addEventListener('pointerdown', function initAudio() {
+// Unlock audio on activation-triggering events. Touch pointerdown alone is
+// NOT one on iOS Safari — pointerup/touchend/click are what actually unlock.
+// Listeners stay attached so audio also recovers after iOS 'interrupted'.
+const unlockAudio = () => {
   audio.init();
   audio.resume();
-}, { capture: true });
+};
+for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) {
+  document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
+}
 
 // ---------- Service worker ----------
 if ('serviceWorker' in navigator && !TEST && location.protocol !== 'file:') {
@@ -510,7 +590,7 @@ if (TEST) {
       over: game.over,
       dropsMade: game.dropsMade,
       dangerLevel: game.dangerLevel,
-      bodies: game.physics.bodies.map((b) => ({ x: b.x, y: b.y, r: b.r, tier: b.tier })),
+      bodies: game.physics.bodies.map((b) => ({ x: b.x, y: b.y, r: b.r, tier: b.tier, eaten: b.eaten })),
       kinetic: game.physics.kineticEnergy(),
     }),
   };

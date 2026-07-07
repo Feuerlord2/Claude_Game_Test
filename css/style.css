@@ -36,7 +36,11 @@ html, body {
 #hud {
   position: absolute;
   top: 0; left: 0; right: 0;
-  padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 0;
+  /* Horizontal insets keep score/pause out of the notch in landscape. */
+  padding: calc(env(safe-area-inset-top, 0px) + 10px)
+    calc(env(safe-area-inset-right, 0px) + 14px)
+    0
+    calc(env(safe-area-inset-left, 0px) + 14px);
   pointer-events: none;
   z-index: 5;
 }
@@ -104,9 +108,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(3, 4, 12, 0.78);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* No backdrop-filter: a full-screen blur over the animating canvas keeps
+     the GPU under sustained load on every menu screen. */
+  background: rgba(3, 4, 12, 0.9);
   z-index: 10;
   padding: 20px;
 }
@@ -114,6 +118,7 @@ html, body {
   width: 100%;
   max-width: 360px;
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px); /* iOS URL-bar-aware; older browsers keep vh */
   overflow-y: auto;
   background: var(--panel);
   border: 1px solid rgba(127, 107, 255, 0.25);
