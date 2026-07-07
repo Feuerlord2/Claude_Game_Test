@@ -1,7 +1,7 @@
 // Cache-first service worker: the whole game works offline after first load.
 // Bump CACHE_VERSION on every deploy to invalidate old caches.
 
-const CACHE_VERSION = 'sd-v1.1.0';
+const CACHE_VERSION = 'sd-v1.2.0';
 
 const ASSETS = [
   './',
@@ -22,9 +22,10 @@ const ASSETS = [
   './js/ads.js',
   './js/rng.js',
   './manifest.webmanifest',
-  './assets/icons/icon-192.png',
-  './assets/icons/icon-512.png',
-  './assets/icons/icon-maskable-512.png'
+  // The 512px icons are install-time-only (~600 KB combined) — the runtime
+  // fetch handler still caches them on demand, so they stay out of the
+  // first-load precache budget.
+  './assets/icons/icon-192.png'
 ];
 
 self.addEventListener('install', (event) => {

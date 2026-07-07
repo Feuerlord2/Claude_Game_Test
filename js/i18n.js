@@ -7,6 +7,7 @@ const STRINGS = {
     daily_label: (n) => `Daily Singularity #${n}`,
     daily_ready: '1 scored attempt · same puzzle worldwide',
     daily_done: (score) => `Scored: ${score} · practice mode`,
+    streak_risk: (n) => `Keep your ${n}-day streak alive!`,
     howto: 'How to',
     settings: 'Settings',
     howto_title: 'How to play',
@@ -15,6 +16,7 @@ const STRINGS = {
 <p class="howto-chain">✨→☄️→🪨→🌠→🌙→🌍→🪐→⭐→🔴→🌟→⚫</p>
 <p>Chains multiply your score. Merging two neutron stars 🌟 births a <b>black hole</b> ⚫ that devours everything nearby.</p>
 <p>Bodies pushed past the <b>red ring</b> panic and show a red countdown. Merge the pile below them to pull them back in — if the countdown runs out, everything collapses.</p>
+<p>After a collapse, one rewarded <b>Solar Flare</b> per run vaporizes every small body (Stardust to Moon) and lets you keep going.</p>
 <p>The <b>Daily Singularity</b> is the same puzzle for every player on Earth. One scored attempt per day — keep your streak alive!</p>`,
     got_it: 'Got it',
     sound: 'Sound',
@@ -30,7 +32,7 @@ const STRINGS = {
     collapse_in: (s) => `Collapse in ${s}s`,
     new_best: 'NEW BEST',
     stats: (best, merges) => `Best body: ${best} · Merges: ${merges}`,
-    revive: '☀️ Solar Flare — keep playing (Ad)',
+    revive: '☀️ Solar Flare — vaporize all small bodies (Ad)',
     restart: 'Play again',
     menu: 'Menu',
     share: 'Share result',
@@ -49,8 +51,8 @@ const STRINGS = {
     mode_practice: 'Practice',
     ad_stub: 'Ad placeholder — portal SDK plugs in here',
     tier_names: ['Stardust', 'Meteoroid', 'Asteroid', 'Comet', 'Moon', 'Planet', 'Gas Giant', 'Star', 'Red Giant', 'Neutron Star', 'Black Hole'],
-    share_text: (n, score, emoji, tierName, tierIdx, streak, url) =>
-      `Singularity Drop #${n}\n${emoji} ${score.toLocaleString('en-US')} pts · ${tierName} (${tierIdx + 1}/11)` +
+    share_text: (n, score, emoji, tierName, tierIdx, streak, url, grid) =>
+      `Singularity Drop #${n}\n${grid}\n${emoji} ${score.toLocaleString('en-US')} pts · ${tierName} (${tierIdx + 1}/11)` +
       (streak > 1 ? `\n🔥 ${streak}-day streak` : '') + `\n${url}`,
   },
   de: {
@@ -59,6 +61,7 @@ const STRINGS = {
     daily_label: (n) => `Daily Singularity #${n}`,
     daily_ready: '1 gewerteter Versuch · weltweit dasselbe Puzzle',
     daily_done: (score) => `Gewertet: ${score} · Übungsmodus`,
+    streak_risk: (n) => `Halte deine ${n}-Tage-Serie am Leben!`,
     howto: 'Anleitung',
     settings: 'Optionen',
     howto_title: 'So funktioniert’s',
@@ -67,6 +70,7 @@ const STRINGS = {
 <p class="howto-chain">✨→☄️→🪨→🌠→🌙→🌍→🪐→⭐→🔴→🌟→⚫</p>
 <p>Ketten multiplizieren deine Punkte. Zwei Neutronensterne 🌟 gebären ein <b>Schwarzes Loch</b> ⚫, das alles in der Nähe verschlingt.</p>
 <p>Körper, die über den <b>roten Ring</b> hinausgedrückt werden, bekommen Panik und zeigen einen roten Countdown. Räume den Haufen darunter ab, um sie zurückzuholen — läuft der Countdown ab, kollabiert alles.</p>
+<p>Nach einem Kollaps verdampft eine <b>Sonneneruption</b> (1× pro Run, Werbung) alle kleinen Körper (Sternenstaub bis Mond) — und du spielst weiter.</p>
 <p>Die <b>Daily Singularity</b> ist für alle Spieler weltweit dasselbe Puzzle. Ein gewerteter Versuch pro Tag — halte deine Serie am Leben!</p>`,
     got_it: 'Alles klar',
     sound: 'Sound',
@@ -82,7 +86,7 @@ const STRINGS = {
     collapse_in: (s) => `Kollaps in ${s} s`,
     new_best: 'NEUER REKORD',
     stats: (best, merges) => `Bester Körper: ${best} · Merges: ${merges}`,
-    revive: '☀️ Sonneneruption — weiterspielen (Ad)',
+    revive: '☀️ Sonneneruption — alle kleinen Körper verdampfen (Ad)',
     restart: 'Nochmal',
     menu: 'Menü',
     share: 'Ergebnis teilen',
@@ -96,13 +100,13 @@ const STRINGS = {
     daily_result: (score) => `Heutiger gewerteter Score: ${score}`,
     practice: 'Übungsrunde — zählt nicht',
     next_daily: (h, m) => `Nächste Daily in ${h} h ${m} min`,
-    best_label: (s) => `Best ${s}`,
+    best_label: (s) => `Rekord ${s}`,
     mode_daily: 'Daily',
     mode_practice: 'Übung',
     ad_stub: 'Werbe-Platzhalter — hier dockt das Portal-SDK an',
     tier_names: ['Sternenstaub', 'Meteoroid', 'Asteroid', 'Komet', 'Mond', 'Planet', 'Gasriese', 'Stern', 'Roter Riese', 'Neutronenstern', 'Schwarzes Loch'],
-    share_text: (n, score, emoji, tierName, tierIdx, streak, url) =>
-      `Singularity Drop #${n}\n${emoji} ${score.toLocaleString('de-DE')} Pkt. · ${tierName} (${tierIdx + 1}/11)` +
+    share_text: (n, score, emoji, tierName, tierIdx, streak, url, grid) =>
+      `Singularity Drop #${n}\n${grid}\n${emoji} ${score.toLocaleString('de-DE')} Pkt. · ${tierName} (${tierIdx + 1}/11)` +
       (streak > 1 ? `\n🔥 Serie: ${streak} Tage` : '') + `\n${url}`, // share only for streak>1, always plural
   },
 };

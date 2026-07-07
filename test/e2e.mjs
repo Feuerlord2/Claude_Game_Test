@@ -32,7 +32,19 @@ const FAKE_DAY = 4;
 let server = null;
 if (!process.env.SD_URL) {
   server = spawn('npx', ['http-server', ROOT, '-p', String(PORT), '-s'], { stdio: 'ignore' });
-  await new Promise((r) => setTimeout(r, 1200));
+  // Poll instead of a fixed sleep — first-ever npx run may download http-server.
+  const deadline = Date.now() + 30000;
+  for (;;) {
+    try {
+      const res = await fetch(`${BASE}/index.html`);
+      if (res.ok) break;
+    } catch { /* not up yet */ }
+    if (Date.now() > deadline) {
+      console.error('server did not come up within 30s');
+      process.exit(1);
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
 }
 
 const results = [];
@@ -54,7 +66,9 @@ async function newPage(ctx) {
 }
 
 async function mobileContext(opts = {}) {
-  return browser.newContext({ ...devices['iPhone 13'], locale: 'de-DE', ...opts });
+  // Pinned timezone: the daily day-number is local-midnight based, so the
+  // suite must not depend on the runner's TZ.
+  return browser.newContext({ ...devices['iPhone 13'], locale: 'de-DE', timezoneId: 'UTC', ...opts });
 }
 
 try {
@@ -145,7 +159,7 @@ try {
       sd.startGame('endless');
       for (let i = 0; i < 250 && !sd.state().over; i++) {
         sd.drop((i % 12) * (Math.PI / 6));
-        sd.stepFrames(46);
+        sd.stepFrames(55); // >= DROP_COOLDOWN 0.45s at DT 1/120
         if (!document.getElementById('danger-banner').classList.contains('hidden')) {
           window.__bannerSeen = true;
         }
@@ -172,7 +186,7 @@ try {
       const sd = window.__sd;
       for (let i = 0; i < 250 && !sd.state().over; i++) {
         sd.drop((i % 12) * (Math.PI / 6));
-        sd.stepFrames(46);
+        sd.stepFrames(55); // >= DROP_COOLDOWN 0.45s at DT 1/120
       }
     });
     ok('second game over reached', await page.evaluate(() => window.__sd.state().over));
@@ -267,7 +281,7 @@ try {
       const official = sd.state().officialDaily;
       for (let i = 0; i < 250 && !sd.state().over; i++) {
         sd.drop((i % 10) * (Math.PI / 5));
-        sd.stepFrames(46);
+        sd.stepFrames(55); // >= DROP_COOLDOWN 0.45s at DT 1/120
       }
       return { official, over: sd.state().over, score: sd.state().score, day: sd.daily.dayNumber() };
     }, FAKE_NOW);
@@ -276,25 +290,45 @@ try {
     ok('daily section shown on game over', await page.isVisible('#go-daily'));
     ok('share button visible', await page.isVisible('#btn-share'));
 
+    // Ad ladder: while the revive is still on the table, the double is held back.
+    ok('revive offered first (ad ladder)', await page.isVisible('#btn-revive'));
+    ok('double held back while revive available', await page.isHidden('#btn-double'));
+
     await page.click('#btn-share');
     await page.waitForTimeout(300);
     const shareText = await page.evaluate(() => window.__sd.lastShareText);
     ok('share text built', typeof shareText === 'string' && shareText.length > 0);
     ok('share text has day number', shareText.includes(`Singularity Drop #${FAKE_DAY}`), shareText);
     ok('share text has url', shareText.includes('http'), shareText);
+    ok('share text has emoji progress grid', shareText.includes('⬛'), shareText);
     ok('share text spoiler-free (no seed digits beyond day/score)', !shareText.includes('seed'));
 
-    // Double via rewarded stub
-    const scoreBefore = flow.score;
-    const hasDouble = await page.isVisible('#btn-double');
-    ok('double button offered', hasDouble);
-    if (hasDouble) {
-      await page.click('#btn-double');
-      await page.waitForTimeout(400);
-      const state = await page.evaluate(() => window.__sd.daily.getDailyState());
-      ok('double doubles the recorded score', state.doubled === true && state.score >= scoreBefore * 2, `score=${state.score}`);
-      ok('double button hidden after use', await page.isHidden('#btn-double'));
-    }
+    // Ladder step 2: revive (ad 1), die again, then the double (ad 2) unlocks.
+    await page.click('#btn-revive');
+    await page.waitForFunction(() => window.__sd.state().screen === 'playing');
+    await page.evaluate(() => {
+      const sd = window.__sd;
+      for (let i = 0; i < 250 && !sd.state().over; i++) {
+        sd.drop((i % 10) * (Math.PI / 5));
+        sd.stepFrames(55);
+      }
+    });
+    ok('second game over reached (daily)', await page.evaluate(() => window.__sd.state().over));
+    ok('double offered once revive is spent', await page.isVisible('#btn-double'));
+    const recorded = await page.evaluate(() => window.__sd.daily.getDailyState().score);
+    await page.click('#btn-double');
+    await page.waitForTimeout(400);
+    const state = await page.evaluate(() => window.__sd.daily.getDailyState());
+    ok('double doubles the recorded score', state.doubled === true && state.score === recorded * 2 && state.rawScore === recorded, JSON.stringify(state));
+    ok('double button hidden after use', await page.isHidden('#btn-double'));
+
+    // Sharing after the double must still share the RAW score.
+    await page.click('#btn-share');
+    await page.waitForTimeout(300);
+    const shareAfter = await page.evaluate(() => window.__sd.lastShareText);
+    const rawFmt = recorded.toLocaleString('de-DE');
+    const dblFmt = (recorded * 2).toLocaleString('de-DE');
+    ok('share uses raw undoubled score', shareAfter.includes(rawFmt) && !shareAfter.includes(dblFmt), shareAfter);
 
     // Second run today is practice
     await page.click('#btn-restart');
@@ -333,8 +367,8 @@ try {
       return out;
     }, FAKE_NOW);
     ok('7-day streak counted', r.after7.count === 7, JSON.stringify(r.after7));
-    ok('shield earned at 7', r.after7.shields === 1, JSON.stringify(r.after7));
-    ok('shield saves a missed day', r.afterSkip.count === 8 && r.afterSkip.shields === 0, JSON.stringify(r.afterSkip));
+    ok('shields earned at day 3 and day 7', r.after7.shields === 2, JSON.stringify(r.after7));
+    ok('shield saves a missed day', r.afterSkip.count === 8 && r.afterSkip.shields === 1, JSON.stringify(r.afterSkip));
     ok('big gap without shields resets streak', r.afterBigGap.count === 1, JSON.stringify(r.afterBigGap));
     ok('longest streak preserved', r.afterBigGap.longest === 8, JSON.stringify(r.afterBigGap));
     await ctx.close();
@@ -425,7 +459,7 @@ try {
       sd.startGame('endless');
       for (let i = 0; i < 200 && !sd.state().over; i++) {
         sd.drop((i % 12) * (Math.PI / 6));
-        sd.stepFrames(46);
+        sd.stepFrames(55); // >= DROP_COOLDOWN 0.45s at DT 1/120
       }
     });
     const finalScore = await page.evaluate(() => window.__sd.state().score);
@@ -470,19 +504,21 @@ try {
     const r = await page.evaluate(() => {
       const sd = window.__sd;
       sd.startGame('endless');
-      // Build a heavy scene: ~70 bodies.
-      for (let t = 0; t < 70; t++) {
-        const a = (t / 70) * Math.PI * 2;
-        const d = 20 + (t % 5) * 12;
-        sd.spawn(t % 4, Math.cos(a) * d, Math.sin(a) * d);
+      // Build the pile the way real play does — dropped from the rim at
+      // spread angles. Synthetic overlapping spawns explode in the solver
+      // and collapse the scene, making the measurement vacuous.
+      for (let i = 0; i < 32 && !sd.state().over; i++) {
+        sd.drop((i * 2.399963) % (Math.PI * 2));
+        sd.stepFrames(56);
       }
-      sd.stepFrames(120); // warm-up
+      sd.stepFrames(240); // settle
       const bodies = sd.state().bodies.length;
       const t0 = performance.now();
       sd.stepFrames(1200); // 10 simulated seconds
       const elapsed = performance.now() - t0;
-      return { bodies, elapsed, perStep: elapsed / 1200 };
+      return { bodies, elapsed, perStep: elapsed / 1200, over: sd.state().over };
     });
+    ok('perf scene survives the whole measurement', r.over === false);
     // 1200 physics steps = 10 s of sim. Budget: avg step must fit a 120 Hz substep
     // twice over even on this shared CI-class CPU.
     ok(`physics step fast enough (${r.perStep.toFixed(2)} ms/step, ${r.bodies} bodies)`, r.perStep < 4, `${r.perStep.toFixed(2)} ms`);

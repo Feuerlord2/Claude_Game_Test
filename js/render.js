@@ -23,6 +23,9 @@ export class Renderer {
     this.bg = document.createElement('canvas');
     this.shake = 0;
     this.time = 0;
+    // Live MediaQueryList — OS-level toggles apply mid-session, matching
+    // the CSS media queries which re-evaluate automatically.
+    this.motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
     this.resize();
   }
 
@@ -603,10 +606,7 @@ export class Renderer {
   }
 
   addShake(amount) {
-    if (this.reducedMotion === undefined) {
-      this.reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    }
-    if (this.reducedMotion) return;
+    if (this.motionQuery && this.motionQuery.matches) return;
     this.shake = Math.min(26, this.shake + amount);
   }
 

@@ -22,12 +22,13 @@ lassen. Zwei gleiche Körper verschmelzen zum nächsten Tier:
 
 - **Kettenreaktionen** multiplizieren Punkte (bis ×3).
 - **Neutronensterne sind klein und schwer** (Sternkollaps!) — Fortschritt schafft Platz.
-- Das **Schwarze Loch** verschlingt 1,7 s lang alles in Reichweite und
+- Das **Schwarze Loch** verschlingt 2,5 s lang alles in Reichweite und
   evaporiert dann mit Bonus (Hawking-Strahlung) — das Board-Clear-Spektakel.
 - Bleibt der Haufen zu lange außerhalb des roten Rings → **Kollaps** (Game Over).
-- **Daily Singularity**: ein deterministischer Seed pro UTC-Tag, weltweit
-  identisch, 1 gewerteter Versuch, Streak mit Schutzschilden (1 je 7 Tage, max. 2),
-  Share-Text im Wordle-Format.
+- **Daily Singularity**: ein deterministischer Seed pro Kalendertag (lokale
+  Mitternacht — Wordle-Modell), weltweit identisch, 1 gewerteter Versuch, Streak
+  mit Schutzschilden (erster an Tag 3, dann alle 7 Tage, max. 2), Share-Text mit
+  Emoji-Fortschrittsgrid im Wordle-Format.
 
 ## Entwicklung
 

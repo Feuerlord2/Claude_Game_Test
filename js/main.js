@@ -104,8 +104,12 @@ function updateMenu() {
   const day = Daily.dayNumber();
   $('daily-label').textContent = t('daily_label', day);
   const state = Daily.getDailyState();
+  const liveStreak = Daily.displayStreak();
   if (state && state.status === 'done') {
     $('daily-sub').textContent = t('daily_done', state.score.toLocaleString());
+  } else if (liveStreak.count > 0) {
+    // Loss aversion beats gain framing ~2:1 — say what's at stake.
+    $('daily-sub').textContent = t('streak_risk', liveStreak.count);
   } else {
     $('daily-sub').textContent = t('daily_ready');
   }
@@ -252,13 +256,17 @@ function handleGameOver(ev) {
       Daily.improveScore(game.score, game.bestTier);
     }
     const state = Daily.getDailyState();
+    // Rewarded ladder: one CTA per moment. While the revive is still on the
+    // table, hold the double back — die, revive (ad 1), die again, double
+    // (ad 2). Parallel offers split attention and cap at one impression.
+    const reviveOffered = !game.reviveUsed && Ads.rewardedAvailable();
     if (state) {
       const streak = Daily.getStreak();
       $('go-daily-summary').textContent = t('daily_result', state.score.toLocaleString());
       $('go-streak').textContent = `${t('streak', streak.count)}${streak.shields > 0 ? '  ' + t('shields', streak.shields) : ''}`;
-      $('btn-double').classList.toggle('hidden', state.doubled || !Ads.rewardedAvailable());
+      $('btn-double').classList.toggle('hidden', state.doubled || !Ads.rewardedAvailable() || reviveOffered);
     } else {
-      // A revived run crossed UTC midnight: yesterday's result is locked in.
+      // A revived run crossed midnight: yesterday's result is locked in.
       $('go-daily-summary').textContent = t('practice');
       $('go-streak').textContent = '';
       hide('btn-double');
@@ -266,9 +274,14 @@ function handleGameOver(ev) {
     updateCountdown();
     show('go-daily');
   } else if (runMode === 'daily') {
+    // Practice run — but today's official score can still be doubled here,
+    // so a player who declined the ad earlier keeps the offer.
+    const state = Daily.getDailyState();
+    const reviveOffered = !game.reviveUsed && Ads.rewardedAvailable();
     $('go-daily-summary').textContent = t('practice');
     $('go-streak').textContent = '';
-    hide('btn-double');
+    $('btn-double').classList.toggle('hidden',
+      !state || state.status !== 'done' || state.doubled || !Ads.rewardedAvailable() || reviveOffered);
     updateCountdown();
     show('go-daily');
   } else {
@@ -547,7 +560,10 @@ $('btn-share').addEventListener('click', async () => {
   const state = Daily.getDailyState();
   if (!state) { toast(t('daily_expired')); return; }
   const streak = Daily.getStreak();
-  const text = buildShareText(state.day, state.score, state.bestTier, streak.count);
+  // Always share the RAW score — an ad-doubled number would silently break
+  // the comparability that makes shared daily scores worth anything.
+  const shareScore = state.rawScore ?? state.score;
+  const text = buildShareText(state.day, shareScore, state.bestTier, streak.count);
   if (TEST) window.__sd.lastShareText = text;
   const result = await share(text);
   if (result === 'copied') toast(t('shared'));

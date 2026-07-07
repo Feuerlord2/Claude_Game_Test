@@ -1,6 +1,6 @@
 // All tuning constants live here. World units: arena radius = 100.
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 export const WORLD = {
   R: 100,            // arena radius (launcher orbit)
@@ -27,16 +27,19 @@ export const RULES = {
   DANGER_TIME: 1.7,        // continuous seconds in danger zone before game over
   SETTLE_AGE: 1.4,         // seconds after drop before a body counts for danger
   CHAIN_WINDOW: 2.0,       // seconds between merges to keep the chain alive
-  CHAIN_STEP: 0.25,        // multiplier gained per chain step
+  CHAIN_STEP: 0.5,         // multiplier per chain step — cap at chain 5, so a
+                           // deliberately staged cascade visibly pays off
   CHAIN_MAX_MULT: 3.0,
   DROP_POOL: 5,            // tiers 0..4 are droppable
   DROP_WEIGHTS: [30, 26, 20, 14, 10],
-  BLACKHOLE_FEED_TIME: 1.7,   // seconds a black hole consumes surroundings
+  BLACKHOLE_FEED_TIME: 2.5,   // seconds a black hole consumes surroundings —
+                              // the game's climax deserves to linger
   BLACKHOLE_PULL_RADIUS: 54,  // extra pull radius around a black hole
   BLACKHOLE_EAT_SCORE: 150,
   BLACKHOLE_FINALE_SCORE: 1500,
-  REVIVE_CLEAR_TIERS: 4,      // "Solar Flare" removes tiers 0..3 — an ad-paid
-                              // rescue must clearly relieve the tighter arena
+  REVIVE_CLEAR_TIERS: 5,      // "Solar Flare" removes tiers 0..4 (the whole
+                              // droppable pool) — an ad-paid rescue must
+                              // clearly relieve the tighter arena
 };
 
 // 11 celestial tiers. radius in world units; mass ~ r^2 * density.

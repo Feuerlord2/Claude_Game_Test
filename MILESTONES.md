@@ -63,3 +63,26 @@ Nutzerfeedback nach erstem Spielen: „KI-Optik“, zu leicht, Verlieren unklar.
       Countdown-Bogen, pulsierendes „⚠️ Kollaps in X,X s“-Banner, rote
       Bildschirm-Vignette, deutlich sichtbarer Danger-Ring, Anleitung erklärt Regel
 - [x] 73/73 E2E-Checks grün nach Umbau
+
+## M8 — Voll-Audit: jede Entscheidung hinterfragt (v1.2.0)
+Drei parallele Fresh-Eyes-Reviews (Code-Korrektheit, Design-Entscheidungen,
+Launch-Readiness) über den kompletten Stand; alle bestätigten Findings umgesetzt.
+- [x] Share-Integrität: geteilt wird immer der Raw-Score (nie der Ad-verdoppelte)
+      + Wordle-artiges Emoji-Fortschrittsgrid (✨☄️🪨…⬛⬛) im Share-Text
+- [x] Loss-Aversion-Nudge im Menü („Halte deine N-Tage-Serie am Leben!")
+- [x] Erster Streak-Schild schon an Tag 3 (Duolingo-Modell), dann alle 7 Tage
+- [x] Rewarded-Ad-Leiter: erst Revive, nach dessen Nutzung Double — auch in
+      Practice-Runs nachholbar (kein CTA-Wettbewerb, mehr Impressions)
+- [x] Chain-Step 0,25→0,5 (Kaskaden-Setup lohnt sich sichtbar),
+      Black-Hole-Fenster 1,7→2,5 s (der Höhepunkt darf wirken),
+      Revive räumt den ganzen Drop-Pool (Tiers 0–4)
+- [x] Daily wechselt um LOKALE Mitternacht (Wordle-Modell statt UTC-Nachmittag
+      in Amerika)
+- [x] Kawaii-App-Icons passend zur neuen Art, Desktop-Hover-Aiming +
+      Hold-to-Rotate, echte Sprite-Vorschau im HUD, prefers-reduced-motion
+- [x] Fixes aus Code-Review: wirkungsloser Perf-Test (Szene kollabierte nach
+      0,7 s), Test-Drop-Kadenz unter Cooldown, eingefrorener reduced-motion-Cache
+- [x] Launch-Readiness: SW-Precache ohne 512er-Icons (~600 KB gespart), og:url/
+      twitter:image/mobile-web-app-capable, Pages-Workflow mit enablement,
+      Testserver-Polling, i18n-Korrekturen, Doku-Fakten aktualisiert
+- [x] 79/79 E2E-Checks grün

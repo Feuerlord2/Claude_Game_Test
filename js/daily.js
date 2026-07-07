@@ -9,8 +9,12 @@ let _now = () => Date.now();
 export function setNowProvider(fn) { _now = fn; }
 export function now() { return _now(); }
 
+// Wordle model: the day is the LOCAL calendar date, so the puzzle flips at
+// the player's midnight (not at 4-7pm in the Americas) — same puzzle for
+// everyone on the same calendar date.
 export function dayNumber(ts = _now()) {
-  return Math.floor((ts - DAILY.EPOCH_UTC) / 86400000);
+  const d = new Date(ts);
+  return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - DAILY.EPOCH_UTC) / 86400000);
 }
 
 export function seedForDay(day) {
@@ -18,9 +22,8 @@ export function seedForDay(day) {
 }
 
 export function msUntilNextDaily(ts = _now()) {
-  const day = dayNumber(ts);
-  const nextMidnight = DAILY.EPOCH_UTC + (day + 1) * 86400000;
-  return nextMidnight - ts;
+  const d = new Date(ts);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - ts;
 }
 
 // state: { day, status: 'inprogress'|'done', score, bestTier, doubled }
@@ -68,7 +71,10 @@ function updateStreakForDay(day) {
   }
   streak.lastDay = day;
   if (streak.count > streak.longest) streak.longest = streak.count;
-  if (streak.count > 0 && streak.count % DAILY.SHIELD_EVERY === 0) {
+  // First shield already at day 3: streak churn is front-loaded, and a young
+  // streak with zero protection is exactly where the habit dies (Duolingo
+  // hands out the first freeze almost immediately for the same reason).
+  if (streak.count === 3 || (streak.count > 0 && streak.count % DAILY.SHIELD_EVERY === 0)) {
     streak.shields = Math.min(DAILY.SHIELD_MAX, streak.shields + 1);
   }
   Storage.set('streak', streak);
