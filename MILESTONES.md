@@ -18,7 +18,7 @@ Portal-SDKs andockbar, Remove-Ads/Kosmetik-IAP im Store-Build.
 - [x] Verifiziert: Playwright-Autoplay (Merges passieren, keine NaN, Game Over + Restart funktionieren)
 
 ## M2 — Juice & Polish
-- [x] Prozedurale Tier-Sprites (Gradient + Glow, gecacht — kein shadowBlur im Frame)
+- [x] Prozedurale Tier-Sprites (Gradient + Glow, gecacht — in M7 durch Kawaii-Sprites ersetzt)
 - [x] Merge-Partikel, Shockwave-Ringe, Screenshake skaliert mit Tier
 - [x] WebAudio-Synth: Drop-Pluck, aufsteigende Merge-Töne, Chain-Pitch, Danger-Heartbeat, BH-Boom
 - [x] Haptik (Vibration API), Starfield-/Nebel-Hintergrund
@@ -62,4 +62,4 @@ Nutzerfeedback nach erstem Spielen: „KI-Optik“, zu leicht, Verlieren unklar.
 - [x] Verlier-Klarheit: gefährdete Körper zeigen Panik-Gesicht + roten
       Countdown-Bogen, pulsierendes „⚠️ Kollaps in X,X s“-Banner, rote
       Bildschirm-Vignette, deutlich sichtbarer Danger-Ring, Anleitung erklärt Regel
-- [x] 72/72 E2E-Checks grün nach Umbau
+- [x] 73/73 E2E-Checks grün nach Umbau

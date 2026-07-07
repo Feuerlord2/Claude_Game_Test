@@ -7,7 +7,7 @@ plus Wordle-artigem **Daily-Modus** mit Streaks und Spoiler-freiem Emoji-Share.
 | | |
 |---|---|
 | **Tech** | Vanilla JS (ES-Module) + Canvas 2D, **null Dependencies, kein Build-Step** |
-| **Größe** | ~60 KB JS gesamt, Instant Load — erfüllt Poki/CrazyGames-Anforderungen |
+| **Größe** | ~90 KB JS gesamt, Instant Load — erfüllt Poki/CrazyGames-Anforderungen |
 | **Plattformen** | Jeder Browser (Touch + Maus + Tastatur), installierbare PWA, offline-fähig |
 | **Sprachen** | Deutsch + Englisch (Auto-Erkennung) |
 | **Monetarisierung** | Rewarded-Ad-Placements hinter Adapter-Interface (SDK-ready), s. unten |
@@ -36,7 +36,7 @@ lassen. Zwei gleiche Körper verschmelzen zum nächsten Tier:
 npx http-server . -p 8080
 # -> http://localhost:8080
 
-# E2E-Tests (headless Chromium via Playwright, 64 Checks)
+# E2E-Tests (headless Chromium via Playwright, 73 Checks)
 node test/e2e.mjs
 ```
 
@@ -48,6 +48,7 @@ node test/e2e.mjs
 ```
 index.html            App-Shell, DOM-Overlays (Menü, Game Over, Settings…)
 css/style.css         Mobile-first UI, safe-area-aware
+js/main.js            Bootstrap: Game-Loop, Input, UI-Flow, Daily-Orchestrierung
 js/config.js          Alle Tuning-Konstanten + Tier-Definitionen
 js/physics.js         Verlet-Kreis-Physik, Radial-Gravitation, Kontakt-Reibung
 js/game.js            State-Machine: Queue, Merges, Chains, Black Hole, Lose
@@ -59,9 +60,17 @@ js/share.js           Share-Text + navigator.share/Clipboard
 js/ads.js             Ad-Adapter-Interface (Stub; Poki/CrazyGames/AdMob-ready)
 js/i18n.js            DE/EN-Strings
 js/storage.js         Safe-localStorage (Private-Mode-Fallback)
+js/haptics.js         Vibration-API-Wrapper
+js/rng.js             Deterministisches PRNG (mulberry32) + Seed-Hashing
 sw.js                 Cache-first Service Worker (offline-fähig)
-test/e2e.mjs          Playwright-E2E: 64 Checks auf iPhone-Viewport
+manifest.webmanifest  PWA-Manifest (Icons, standalone, portrait)
+.github/workflows/    GitHub-Pages-Deploy bei Push auf main
+test/e2e.mjs          Playwright-E2E: 73 Checks auf iPhone-Viewport
 ```
+
+> **Test-Voraussetzung:** Playwright global installieren
+> (`npm i -g playwright && npx playwright install chromium`) — das Repo hat
+> bewusst keine package.json, das Spiel selbst braucht keinerlei Build.
 
 ## 🚀 Launch-Playbook (in dieser Reihenfolge)
 
