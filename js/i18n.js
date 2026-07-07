@@ -87,7 +87,7 @@ const STRINGS = {
     share_fail: 'Kopieren fehlgeschlagen',
     double: '🎬 Punkte verdoppeln (Ad)',
     doubled: 'Punkte verdoppelt!',
-    streak: (n) => `🔥 Serie: ${n} Tage`,
+    streak: (n) => `🔥 Serie: ${n} ${n === 1 ? 'Tag' : 'Tage'}`,
     shields: (n) => `🛡️ ${n}`,
     daily_result: (score) => `Heutiger gewerteter Score: ${score}`,
     practice: 'Übungsrunde — zählt nicht',
@@ -99,7 +99,7 @@ const STRINGS = {
     tier_names: ['Sternenstaub', 'Meteoroid', 'Asteroid', 'Komet', 'Mond', 'Planet', 'Gasriese', 'Stern', 'Roter Riese', 'Neutronenstern', 'Schwarzes Loch'],
     share_text: (n, score, emoji, tierName, tierIdx, streak, url) =>
       `Singularity Drop #${n}\n${emoji} ${score.toLocaleString('de-DE')} Pkt. · ${tierName} (${tierIdx + 1}/11)` +
-      (streak > 1 ? `\n🔥 Serie: ${streak} Tage` : '') + `\n${url}`,
+      (streak > 1 ? `\n🔥 Serie: ${streak} Tage` : '') + `\n${url}`, // share only for streak>1, always plural
   },
 };
 
