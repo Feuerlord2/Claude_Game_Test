@@ -14,7 +14,7 @@ const STRINGS = {
 <p>Two identical bodies <b>merge</b> into the next one:</p>
 <p class="howto-chain">✨→☄️→🪨→🌠→🌙→🌍→🪐→⭐→🔴→🌟→⚫</p>
 <p>Chains multiply your score. Merging two neutron stars 🌟 births a <b>black hole</b> ⚫ that devours everything nearby.</p>
-<p>If the pile stays outside the <b>red ring</b> too long, it collapses — game over.</p>
+<p>Bodies pushed past the <b>red ring</b> panic and show a red countdown. Merge the pile below them to pull them back in — if the countdown runs out, everything collapses.</p>
 <p>The <b>Daily Singularity</b> is the same puzzle for every player on Earth. One scored attempt per day — keep your streak alive!</p>`,
     got_it: 'Got it',
     sound: 'Sound',
@@ -27,6 +27,7 @@ const STRINGS = {
     resume: 'Resume',
     quit: 'Back to menu',
     collapse: 'Collapse!',
+    collapse_in: (s) => `Collapse in ${s}s`,
     new_best: 'NEW BEST',
     stats: (best, merges) => `Best body: ${best} · Merges: ${merges}`,
     revive: '☀️ Solar Flare — keep playing (Ad)',
@@ -65,7 +66,7 @@ const STRINGS = {
 <p>Zwei gleiche Körper <b>verschmelzen</b> zum nächsten:</p>
 <p class="howto-chain">✨→☄️→🪨→🌠→🌙→🌍→🪐→⭐→🔴→🌟→⚫</p>
 <p>Ketten multiplizieren deine Punkte. Zwei Neutronensterne 🌟 gebären ein <b>Schwarzes Loch</b> ⚫, das alles in der Nähe verschlingt.</p>
-<p>Bleibt der Haufen zu lange außerhalb des <b>roten Rings</b>, kollabiert er — Game Over.</p>
+<p>Körper, die über den <b>roten Ring</b> hinausgedrückt werden, bekommen Panik und zeigen einen roten Countdown. Räume den Haufen darunter ab, um sie zurückzuholen — läuft der Countdown ab, kollabiert alles.</p>
 <p>Die <b>Daily Singularity</b> ist für alle Spieler weltweit dasselbe Puzzle. Ein gewerteter Versuch pro Tag — halte deine Serie am Leben!</p>`,
     got_it: 'Alles klar',
     sound: 'Sound',
@@ -78,6 +79,7 @@ const STRINGS = {
     resume: 'Weiter',
     quit: 'Zum Menü',
     collapse: 'Kollaps!',
+    collapse_in: (s) => `Kollaps in ${s} s`,
     new_best: 'NEUER REKORD',
     stats: (best, merges) => `Bester Körper: ${best} · Merges: ${merges}`,
     revive: '☀️ Sonneneruption — weiterspielen (Ad)',

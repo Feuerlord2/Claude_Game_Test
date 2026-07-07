@@ -48,3 +48,18 @@ Portal-SDKs andockbar, Remove-Ads/Kosmetik-IAP im Store-Build.
 - [x] README: Setup, Tests, Deployment, Portal-Submission-Playbook, Capacitor-Pfad
 - [x] Monetarisierungs-Playbook mit konkreten nächsten Schritten
 - [x] Alles committet und gepusht auf `claude/mobile-game-dev-66vxk6`
+
+## M7 — Playtest-Feedback: Kawaii-Art, Schwierigkeit, Verlier-Klarheit
+Nutzerfeedback nach erstem Spielen: „KI-Optik“, zu leicht, Verlieren unklar.
+- [x] Kawaii-Art-Direction: flache satte Farben, dicke Sticker-Outlines, Gesichter
+      auf allen Körpern (blinzeln, freuen sich beim Merge, Panik in der Danger-Zone,
+      hungriges Schwarzes Loch), Sonnenstrahlen für Sterne, Cartoon-Akkretionsring
+- [x] UI-Redesign: Sticker-Lettering, drückbare Solid-Buttons mit Hard-Shadow,
+      chunky Panels/Toggles — weg vom generischen Glass-Look
+- [x] Schwierigkeit: Arena-Kapazität ~55 % reduziert (DANGER_R 84→74, Körper +18 %),
+      Kollaps-Warnzeit 2,4 s→1,7 s, Drop-Cooldown 0,36 s→0,45 s
+      (Zufalls-Bot: Ø 41 Drops bis Game Over statt 109)
+- [x] Verlier-Klarheit: gefährdete Körper zeigen Panik-Gesicht + roten
+      Countdown-Bogen, pulsierendes „⚠️ Kollaps in X,X s“-Banner, rote
+      Bildschirm-Vignette, deutlich sichtbarer Danger-Ring, Anleitung erklärt Regel
+- [x] 72/72 E2E-Checks grün nach Umbau

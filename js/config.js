@@ -5,7 +5,7 @@ export const VERSION = '1.0.0';
 export const WORLD = {
   R: 100,            // arena radius (launcher orbit)
   SPAWN_R: 96,       // spawn distance from center
-  DANGER_R: 84,      // bodies settled beyond this edge distance trigger game over
+  DANGER_R: 74,      // bodies settled beyond this edge distance trigger game over
   CLAMP_R: 112,      // hard position clamp (safety net)
 };
 
@@ -23,8 +23,8 @@ export const PHYSICS = {
 };
 
 export const RULES = {
-  DROP_COOLDOWN: 0.36,     // min seconds between drops
-  DANGER_TIME: 2.4,        // continuous seconds in danger zone before game over
+  DROP_COOLDOWN: 0.45,     // min seconds between drops
+  DANGER_TIME: 1.7,        // continuous seconds in danger zone before game over
   SETTLE_AGE: 1.4,         // seconds after drop before a body counts for danger
   CHAIN_WINDOW: 2.0,       // seconds between merges to keep the chain alive
   CHAIN_STEP: 0.25,        // multiplier gained per chain step
@@ -32,7 +32,7 @@ export const RULES = {
   DROP_POOL: 5,            // tiers 0..4 are droppable
   DROP_WEIGHTS: [30, 26, 20, 14, 10],
   BLACKHOLE_FEED_TIME: 1.7,   // seconds a black hole consumes surroundings
-  BLACKHOLE_PULL_RADIUS: 46,  // extra pull radius around a black hole
+  BLACKHOLE_PULL_RADIUS: 54,  // extra pull radius around a black hole
   BLACKHOLE_EAT_SCORE: 150,
   BLACKHOLE_FINALE_SCORE: 1500,
   REVIVE_CLEAR_TIERS: 3,      // "Solar Flare" removes tiers 0..2
@@ -41,18 +41,19 @@ export const RULES = {
 // 11 celestial tiers. radius in world units; mass ~ r^2 * density.
 // Neutron star is intentionally SMALL and dense (stellar collapse!) —
 // merging two red giants relieves board pressure as a reward.
+// Sizes tuned against DANGER_R so a run overfills after ~50-60 drops.
 export const TIERS = [
-  { id: 'stardust',    r: 4.4,  density: 1.0, color: '#cfe0ff', glow: '#8fb8ff', score: 0,    emoji: '✨' },
-  { id: 'meteoroid',   r: 5.8,  density: 1.0, color: '#a98f78', glow: '#c9a888', score: 10,   emoji: '☄️' },
-  { id: 'asteroid',    r: 7.6,  density: 1.0, color: '#8a8078', glow: '#a89888', score: 20,   emoji: '🪨' },
-  { id: 'comet',       r: 9.8,  density: 1.0, color: '#9fdcec', glow: '#5fc8e8', score: 35,   emoji: '🌠' },
-  { id: 'moon',        r: 12.6, density: 1.0, color: '#d4d0c8', glow: '#b8b4ac', score: 55,   emoji: '🌙' },
-  { id: 'planet',      r: 16.0, density: 1.0, color: '#4f9de8', glow: '#3f8dd8', score: 90,   emoji: '🌍' },
-  { id: 'gasgiant',    r: 20.0, density: 1.0, color: '#e8a34f', glow: '#e8933f', score: 145,  emoji: '🪐' },
-  { id: 'star',        r: 24.6, density: 1.0, color: '#ffd75e', glow: '#ffc72e', score: 235,  emoji: '⭐' },
-  { id: 'redgiant',    r: 29.4, density: 1.0, color: '#ff6b4a', glow: '#ff4b2a', score: 380,  emoji: '🔴' },
-  { id: 'neutron',     r: 15.0, density: 6.0, color: '#e6dcff', glow: '#b49cff', score: 615,  emoji: '🌟' },
-  { id: 'blackhole',   r: 17.0, density: 9.0, color: '#0a0a14', glow: '#ff9a3c', score: 1000, emoji: '⚫' },
+  { id: 'stardust',    r: 5.2,  density: 1.0, color: '#fff3b0', glow: '#ffe27a', score: 0,    emoji: '✨' },
+  { id: 'meteoroid',   r: 6.9,  density: 1.0, color: '#c9a27e', glow: '#e0b98f', score: 10,   emoji: '☄️' },
+  { id: 'asteroid',    r: 9.0,  density: 1.0, color: '#9aa3ad', glow: '#b8c2cc', score: 20,   emoji: '🪨' },
+  { id: 'comet',       r: 11.6, density: 1.0, color: '#7fd8ef', glow: '#5fc8e8', score: 35,   emoji: '🌠' },
+  { id: 'moon',        r: 14.9, density: 1.0, color: '#e8e4da', glow: '#cfc9bc', score: 55,   emoji: '🌙' },
+  { id: 'planet',      r: 18.9, density: 1.0, color: '#5fb2f2', glow: '#4fa2e2', score: 90,   emoji: '🌍' },
+  { id: 'gasgiant',    r: 23.6, density: 1.0, color: '#f2a65e', glow: '#e8934f', score: 145,  emoji: '🪐' },
+  { id: 'star',        r: 29.0, density: 1.0, color: '#ffd75e', glow: '#ffc72e', score: 235,  emoji: '⭐' },
+  { id: 'redgiant',    r: 34.7, density: 1.0, color: '#ff7a5c', glow: '#ff5b3a', score: 380,  emoji: '🔴' },
+  { id: 'neutron',     r: 17.7, density: 6.0, color: '#cdbfff', glow: '#b49cff', score: 615,  emoji: '🌟' },
+  { id: 'blackhole',   r: 20.0, density: 9.0, color: '#14101f', glow: '#ff9a3c', score: 1000, emoji: '⚫' },
 ];
 
 export const BLACKHOLE_TIER = TIERS.length - 1;

@@ -126,6 +126,7 @@ export class Game {
     nb.py = y - vy;
     nb.mergeGrace = PHYSICS.MERGE_GRACE;
     nb.hadContact = true;
+    nb.happyUntil = this.time + 0.9; // freshly merged bodies beam for a moment
     this.physics.add(nb);
 
     this.chain++;

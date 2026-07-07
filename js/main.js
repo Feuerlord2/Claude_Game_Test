@@ -1,6 +1,6 @@
 // Bootstrap + orchestration: input, render loop, UI flow, daily mode, ads.
 
-import { VERSION, TIERS, BLACKHOLE_TIER, PHYSICS } from './config.js';
+import { VERSION, TIERS, BLACKHOLE_TIER, PHYSICS, RULES } from './config.js';
 import { Game } from './game.js';
 import { Body } from './physics.js';
 import { Renderer } from './render.js';
@@ -200,6 +200,8 @@ function updateHud(force = false) {
 
 function handleGameOver(ev) {
   screen = 'gameover';
+  hide('danger-banner');
+  lastDangerText = '';
   Ads.gameplayStop();
   audio.gameover();
   Haptics.gameover();
@@ -253,6 +255,23 @@ function handleGameOver(ev) {
 
   $('btn-revive').classList.toggle('hidden', game.reviveUsed || !Ads.rewardedAvailable());
   show('gameover');
+}
+
+let lastDangerText = '';
+function updateDangerBanner() {
+  const banner = $('danger-banner');
+  if (game.dangerLevel > 0.08 && !game.over) {
+    const remaining = Math.max(0, RULES.DANGER_TIME * (1 - game.dangerLevel));
+    const text = `⚠️ ${t('collapse_in', remaining.toFixed(1))}`;
+    if (text !== lastDangerText) {
+      banner.textContent = text;
+      lastDangerText = text;
+    }
+    banner.classList.remove('hidden');
+  } else if (lastDangerText !== '') {
+    banner.classList.add('hidden');
+    lastDangerText = '';
+  }
 }
 
 function updateCountdown() {
@@ -329,6 +348,7 @@ function frame(now) {
     game.update(dt);
     processEvents(game.drainEvents());
     updateHud();
+    updateDangerBanner();
     if (game.dangerLevel > 0.3) {
       audio.heartbeat(game.dangerLevel);
       dangerTick += dt;

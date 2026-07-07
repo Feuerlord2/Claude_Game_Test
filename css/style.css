@@ -17,7 +17,7 @@ html, body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -100,6 +100,28 @@ html, body {
   border-radius: 999px;
   padding: 3px 10px;
 }
+.danger-banner {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff3c5a;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  border: 3px solid #7a0e22;
+  border-radius: 999px;
+  padding: 7px 18px;
+  box-shadow: 0 4px 0 #7a0e22;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  animation: dangerpulse 0.5s ease-in-out infinite alternate;
+}
+@keyframes dangerpulse {
+  from { transform: translateX(-50%) scale(1); }
+  to { transform: translateX(-50%) scale(1.07); }
+}
 
 /* ---------- Overlays ---------- */
 .overlay {
@@ -120,63 +142,82 @@ html, body {
   max-height: calc(100vh - 40px);
   max-height: calc(100dvh - 40px); /* iOS URL-bar-aware; older browsers keep vh */
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid rgba(127, 107, 255, 0.25);
-  border-radius: 24px;
+  background: #141838;
+  border: 3px solid #2e3468;
+  border-radius: 28px;
   padding: 28px 24px calc(24px + env(safe-area-inset-bottom, 0px));
   text-align: center;
-  box-shadow: 0 0 60px rgba(127, 107, 255, 0.18);
+  box-shadow: 0 8px 0 rgba(10, 12, 30, 0.9), 0 0 60px rgba(127, 107, 255, 0.15);
 }
 .title {
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 900;
   letter-spacing: 1px;
   line-height: 1.05;
-  background: linear-gradient(135deg, #e8ecff 30%, #7f6bff 70%, #ffb45e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
+  text-shadow: 3px 3px 0 #6a4fe0;
 }
-.title-accent { display: block; font-size: 26px; letter-spacing: 6px; }
+.title-accent {
+  display: block;
+  font-size: 27px;
+  letter-spacing: 7px;
+  color: var(--accent2);
+  text-shadow: 3px 3px 0 #8a4a12;
+}
 .tagline { margin: 10px 0 22px; font-size: 13px; color: var(--dim); }
 
 .btn {
   display: block;
   width: 100%;
-  margin: 10px 0;
-  padding: 15px 16px;
-  border-radius: 16px;
-  border: none;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: 18px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   color: var(--text);
-  background: rgba(139, 147, 184, 0.14);
-  border: 1px solid rgba(139, 147, 184, 0.25);
-  transition: transform 0.08s ease-out;
+  background: #232852;
+  border: 3px solid #383f7d;
+  box-shadow: 0 4px 0 #0c0e24;
+  transition: transform 0.06s ease-out, box-shadow 0.06s ease-out;
 }
-.btn:active { transform: scale(0.97); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0c0e24; }
 .btn-primary {
-  background: linear-gradient(135deg, #6a52ff, #9a6bff);
-  border: none;
-  box-shadow: 0 4px 24px rgba(127, 107, 255, 0.45);
+  background: #7c5cff;
+  border-color: #2a1e66;
+  box-shadow: 0 4px 0 #2a1e66;
+  color: #fff;
 }
+.btn-primary:active { box-shadow: 0 1px 0 #2a1e66; }
 .btn-daily {
-  background: linear-gradient(135deg, rgba(255, 180, 94, 0.18), rgba(255, 120, 94, 0.12));
-  border: 1px solid rgba(255, 180, 94, 0.45);
+  background: #ff9d3f;
+  border-color: #7a3d10;
+  box-shadow: 0 4px 0 #7a3d10;
+  color: #3a1d05;
 }
-.btn-sub { display: block; font-size: 12px; font-weight: 500; color: var(--dim); margin-top: 3px; }
-.btn-ghost { background: transparent; border: 1px solid rgba(139, 147, 184, 0.3); color: var(--dim); }
+.btn-daily:active { box-shadow: 0 1px 0 #7a3d10; }
+.btn-sub { display: block; font-size: 12px; font-weight: 600; color: rgba(58, 29, 5, 0.75); margin-top: 3px; }
+.btn-ghost {
+  background: transparent;
+  border: 3px solid #383f7d;
+  box-shadow: none;
+  color: var(--dim);
+}
+.btn-ghost:active { transform: scale(0.97); }
 .btn-share {
-  background: linear-gradient(135deg, #1d9e7a, #4fe0b0);
-  border: none;
-  color: #04241a;
+  background: #3ecf8e;
+  border-color: #0e5c3a;
+  box-shadow: 0 4px 0 #0e5c3a;
+  color: #06301d;
 }
+.btn-share:active { box-shadow: 0 1px 0 #0e5c3a; }
 .btn-reward {
-  background: linear-gradient(135deg, #b8860f, #ffb45e);
-  border: none;
-  color: #2a1c02;
+  background: #ffc63f;
+  border-color: #7a5410;
+  box-shadow: 0 4px 0 #7a5410;
+  color: #3a2705;
 }
+.btn-reward:active { box-shadow: 0 1px 0 #7a5410; }
 .menu-row { display: flex; gap: 10px; }
 .menu-row .btn { flex: 1; }
 .menu-streak { margin-top: 14px; font-size: 14px; color: var(--accent2); min-height: 18px; }
@@ -193,19 +234,21 @@ html, body {
   font-size: 15px;
 }
 .toggle {
-  width: 56px; height: 30px;
+  width: 58px; height: 32px;
   border-radius: 999px;
-  border: 1px solid rgba(139, 147, 184, 0.4);
-  background: rgba(139, 147, 184, 0.15);
+  border: 3px solid #383f7d;
+  background: #1a1e42;
   color: var(--dim);
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 3px 0 #0c0e24;
 }
 .toggle.on {
-  background: linear-gradient(135deg, #6a52ff, #9a6bff);
+  background: #7c5cff;
   color: #fff;
-  border: none;
+  border-color: #2a1e66;
+  box-shadow: 0 3px 0 #2a1e66;
 }
 .settings-version { margin-top: 16px; font-size: 11px; color: rgba(139, 147, 184, 0.5); }
 
@@ -221,21 +264,23 @@ h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
   display: inline-block;
   margin-top: 8px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 1.5px;
-  color: var(--good);
-  border: 1px solid rgba(79, 224, 176, 0.5);
+  color: #06301d;
+  background: #3ecf8e;
+  border: 2px solid #0e5c3a;
   border-radius: 999px;
-  padding: 4px 12px;
+  padding: 4px 14px;
+  box-shadow: 0 3px 0 #0e5c3a;
   animation: chainpop 0.3s ease-out;
 }
 .go-stats { font-size: 14px; color: var(--dim); margin-bottom: 10px; }
 .go-daily {
   margin: 12px 0;
   padding: 14px 12px;
-  border-radius: 16px;
-  background: rgba(255, 180, 94, 0.08);
-  border: 1px solid rgba(255, 180, 94, 0.25);
+  border-radius: 18px;
+  background: rgba(255, 157, 63, 0.12);
+  border: 2px dashed rgba(255, 157, 63, 0.5);
   font-size: 14px;
 }
 .go-streak { margin: 8px 0; color: var(--accent2); font-weight: 700; }
