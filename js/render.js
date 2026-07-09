@@ -99,17 +99,24 @@ export class Renderer {
 
   // ---------- background: parallax-ish depth via layered stars + nebula ----------
   renderBackground() {
+    // Baked slightly larger than the viewport so a slow parallax drift never
+    // exposes an edge.
+    this.bgPad = 18;
+    const bw = this.w + this.bgPad * 2;
+    const bh = this.h + this.bgPad * 2;
     const c = this.bg;
-    c.width = Math.round(this.w * this.dpr);
-    c.height = Math.round(this.h * this.dpr);
+    c.width = Math.round(bw * this.dpr);
+    c.height = Math.round(bh * this.dpr);
     const ctx = c.getContext('2d');
     ctx.scale(this.dpr, this.dpr);
+    // Keep local aliases so the existing paint code below works unchanged.
+    const paintW = bw, paintH = bh;
 
-    const bg = ctx.createLinearGradient(0, 0, 0, this.h);
+    const bg = ctx.createLinearGradient(0, 0, 0, paintH);
     bg.addColorStop(0, '#080a1a');
     bg.addColorStop(1, '#04050d');
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, this.w, this.h);
+    ctx.fillRect(0, 0, paintW, paintH);
 
     const nebulae = [
       { x: 0.2, y: 0.24, r: 0.55, color: 'rgba(88, 60, 168, 0.18)' },
@@ -119,26 +126,26 @@ export class Renderer {
     ];
     for (const n of nebulae) {
       const g = ctx.createRadialGradient(
-        n.x * this.w, n.y * this.h, 0,
-        n.x * this.w, n.y * this.h, n.r * Math.max(this.w, this.h)
+        n.x * paintW, n.y * paintH, 0,
+        n.x * paintW, n.y * paintH, n.r * Math.max(paintW, paintH)
       );
       g.addColorStop(0, n.color);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, this.w, this.h);
+      ctx.fillRect(0, 0, paintW, paintH);
     }
 
     // Two star depth layers: far dim dust + near brighter stars with soft halos.
     const rand = mulberry32(hashString('starfield-v2'));
     for (let i = 0; i < 220; i++) {
-      const x = rand() * this.w, y = rand() * this.h;
+      const x = rand() * paintW, y = rand() * paintH;
       const r = rand() * 0.8 + 0.15;
       const a = rand() * 0.35 + 0.1;
       ctx.fillStyle = `rgba(200, 214, 255, ${a})`;
       ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
     }
     for (let i = 0; i < 34; i++) {
-      const x = rand() * this.w, y = rand() * this.h;
+      const x = rand() * paintW, y = rand() * paintH;
       const r = rand() * 1.3 + 0.7;
       const a = rand() * 0.4 + 0.35;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
@@ -860,7 +867,11 @@ export class Renderer {
     if (this.shake > 0.01) this.shake *= Math.pow(0.86, dt * 60); else this.shake = 0;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.drawImage(this.bg, 0, 0, this.w, this.h);
+    // Slow parallax drift of the star layer (static under reduced motion).
+    const pad = this.bgPad || 0;
+    const dx = this.reduced() ? 0 : Math.sin(this.time * 0.07) * pad * 0.55;
+    const dy = this.reduced() ? 0 : Math.cos(this.time * 0.05) * pad * 0.55;
+    ctx.drawImage(this.bg, -pad + dx, -pad + dy, this.w + pad * 2, this.h + pad * 2);
 
     const shx = (Math.random() - 0.5) * this.shake;
     const shy = (Math.random() - 0.5) * this.shake;
@@ -891,6 +902,24 @@ export class Renderer {
 
       this.drawFront(ctx, b, sx, sy, sr, game);
       this.drawFace(ctx, sx, sy, sr, this.faceState(b, game), b.tier);
+
+      // Accessibility: optional tier-number badge — eleven tiers must not be
+      // distinguishable by colour alone.
+      if (opts.badges && sr >= 8) {
+        const br = Math.max(6, sr * 0.28);
+        const bx = sx + sr * 0.62, by = sy + sr * 0.62;
+        ctx.fillStyle = 'rgba(12, 14, 30, 0.85)';
+        ctx.beginPath(); ctx.arc(bx, by, br, 0, TAU); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `800 ${Math.round(br * 1.15)}px ui-rounded, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(b.tier + 1), bx, by + br * 0.05);
+        ctx.textBaseline = 'alphabetic';
+      }
 
       if (b.dangerTime > 0.05 && b.eaten === 0) {
         const remaining = 1 - b.dangerTime / RULES.DANGER_TIME;
@@ -933,6 +962,16 @@ export class Renderer {
   }
 
   drawRings(ctx, s, game) {
+    // Decorative outer orbits frame the arena on wide viewports so it does
+    // not float in empty black space.
+    if (this.w > this.h * 1.1) {
+      ctx.strokeStyle = 'rgba(120, 130, 180, 0.07)';
+      ctx.lineWidth = 1;
+      for (const m of [1.16, 1.34]) {
+        ctx.beginPath(); ctx.arc(0, 0, WORLD.R * s * m, 0, TAU); ctx.stroke();
+      }
+    }
+
     // Outer launcher orbit — solid faint hairline.
     ctx.strokeStyle = 'rgba(150, 160, 200, 0.14)';
     ctx.lineWidth = 1;

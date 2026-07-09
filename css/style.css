@@ -224,7 +224,31 @@ html, body {
 
 .howto-body { text-align: left; font-size: 14px; line-height: 1.55; color: var(--dim); margin: 14px 0 18px; }
 .howto-body b { color: var(--text); }
-.howto-body .howto-chain { text-align: center; font-size: 17px; margin: 12px 0; letter-spacing: 2px; }
+.howto-body .howto-chain { display: block; text-align: center; font-size: 17px; margin: 12px 0; letter-spacing: 2px; }
+
+/* ---------- Tutorial ---------- */
+.tut-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.tut-dots span {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: rgba(139, 147, 184, 0.3);
+}
+.tut-dots span.on { background: var(--accent2); }
+.tut-body { min-height: 120px; text-align: center; }
+
+/* ---------- Codex ---------- */
+.codex-title { font-size: 16px; margin-top: 8px; }
+.codex {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  margin: 10px 0 16px;
+  text-align: left;
+}
+.codex-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
+.codex-row canvas { flex: none; }
+.codex-row b { color: var(--text); font-size: 12px; display: block; }
+.codex-row small { font-size: 10px; color: var(--accent2); display: block; }
 
 .setting-row {
   display: flex;

@@ -106,6 +106,11 @@ perfekte Kreis, nur andere Farbe). Phase 1 löst „alles rund" + „gestempelt"
 - [x] Tiefen-Starfield + Nebel im Hintergrund
 - [x] Alle neuen Animationen mit `prefers-reduced-motion`-Fallback (verifiziert)
 - [x] Daily-Determinismus, Performance (79/79 E2E, Perf-Check grün) intakt
-- [ ] Phase 2: Hintergrund/Komposition (Ultrawide), Onboarding, Accessibility
+- [x] Phase 2 (v1.4.0): First-Run-Tutorial (3 Karten inkl. der zwei
+      genre-untypischen Mechaniken), One-Time-Toasts beim ersten
+      Neutronenstern/Schwarzen Loch, Tier-Codex in der Anleitung (live
+      gerenderte Sprites), Tier-Nummern-Badges als Accessibility-Setting,
+      Parallax-Starfield-Drift, dekorative Orbit-Ringe auf breiten Screens —
+      87/87 E2E-Checks
 - [ ] Phase 3: Kosmetische Meta-Progression, Share-Grid-Redesign
 - [ ] Phase 4: Gravitations-Puls, Modifikatoren, Freundes-Duell

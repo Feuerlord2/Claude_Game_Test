@@ -496,6 +496,39 @@ try {
     await ctx.close();
   }
 
+  // ---------------- 11b. Onboarding, codex & accessibility ----------------
+  {
+    console.log('onboarding & accessibility');
+    const ctx = await mobileContext();
+    const page = await newPage(ctx);
+    // Fresh profile: the first tap on play shows the 3-card tutorial.
+    await page.click('#btn-endless');
+    ok('tutorial shows on first play', await page.isVisible('#tutorial'));
+    await page.click('#btn-tut-next');
+    await page.click('#btn-tut-next');
+    await page.click('#btn-tut-next');
+    ok('tutorial ends into the game', await page.evaluate(() => window.__sd.state().screen === 'playing'));
+    ok('tutorial flag persisted', await page.evaluate(() => JSON.parse(localStorage.getItem('sd1:tut')) === true));
+
+    await page.evaluate(() => window.__sd.showMenu());
+    await page.click('#btn-endless');
+    ok('tutorial skipped on second play', await page.isHidden('#tutorial'));
+    ok('second play starts instantly', await page.evaluate(() => window.__sd.state().screen === 'playing'));
+
+    await page.evaluate(() => window.__sd.showMenu());
+    await page.click('#btn-howto');
+    const rows = await page.evaluate(() => document.querySelectorAll('#codex .codex-row').length);
+    ok('codex lists all 11 bodies', rows === 11, `rows=${rows}`);
+    await page.click('#btn-howto-close');
+
+    await page.click('#btn-settings');
+    await page.click('#tgl-badges');
+    const s = await page.evaluate(() => JSON.parse(localStorage.getItem('sd1:settings')));
+    ok('tier-badge setting persisted', s.badges === true, JSON.stringify(s));
+    ok('no console errors', page.errors.length === 0, page.errors.join('; '));
+    await ctx.close();
+  }
+
   // ---------------- 12. Performance ----------------
   {
     console.log('performance');

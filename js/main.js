@@ -31,7 +31,8 @@ if (TEST) {
 }
 
 // ---------- Settings ----------
-const settings = Storage.get('settings', { sound: true, music: true, haptics: true });
+const settings = Storage.get('settings', { sound: true, music: true, haptics: true, badges: false });
+if (settings.badges === undefined) settings.badges = false; // migrate pre-1.4 settings
 audio.setSound(settings.sound);
 audio.setMusic(settings.music);
 Haptics.enabled = settings.haptics;
@@ -65,6 +66,8 @@ function applyStaticText() {
   $('lbl-sound').textContent = t('sound');
   $('lbl-music').textContent = t('music');
   $('lbl-haptics').textContent = t('haptics');
+  $('lbl-badges').textContent = t('show_badges');
+  $('codex-title').textContent = t('codex_title');
   $('btn-settings-close').textContent = t('close');
   $('pause-title').textContent = t('paused');
   $('btn-resume').textContent = t('resume');
@@ -89,6 +92,7 @@ function refreshToggles() {
   set('tgl-sound', settings.sound);
   set('tgl-music', settings.music);
   set('tgl-haptics', settings.haptics);
+  set('tgl-badges', settings.badges);
 }
 
 function toast(msg, ms = 1800) {
@@ -344,6 +348,14 @@ function processEvents(events) {
           renderer.addShake(16);
           audio.bhBirth();
         }
+        // One-time teaching toasts for the two genre-atypical mechanics.
+        if (ev.tier === 9 && !Storage.get('seen:neutron', false)) {
+          Storage.set('seen:neutron', true);
+          toast(t('first_neutron'), 4200);
+        } else if (ev.tier === BLACKHOLE_TIER && !Storage.get('seen:bh', false)) {
+          Storage.set('seen:bh', true);
+          toast(t('first_bh'), 4200);
+        }
         if (officialDaily) Daily.recordProgress(game.score, game.bestTier);
         break;
       }
@@ -397,7 +409,7 @@ function frame(now) {
   // the canvas animation is cosmetic there and full-rate redraws just burn
   // battery on phones sitting on a menu.
   if (screen === 'playing' || now - lastDraw >= 200) {
-    renderer.draw(game, particles, { hideLauncher: screen !== 'playing' }, dt);
+    renderer.draw(game, particles, { hideLauncher: screen !== 'playing', badges: settings.badges }, dt);
     lastDraw = now;
   }
   requestAnimationFrame(frame);
@@ -478,9 +490,76 @@ window.addEventListener('keyup', (e) => keysHeld.delete(e.code));
 window.addEventListener('blur', () => keysHeld.clear());
 
 // ---------- Buttons ----------
-$('btn-endless').addEventListener('click', () => startGame('endless'));
-$('btn-daily').addEventListener('click', () => startGame('daily'));
-$('btn-howto').addEventListener('click', () => show('howto'));
+// ---------- First-run tutorial (3 cards, once ever) ----------
+let tutPendingMode = null;
+let tutStep = 0;
+
+function showTutorialCard() {
+  const steps = t('tut_steps');
+  const step = steps[tutStep];
+  $('tut-title').textContent = step.title;
+  $('tut-body').innerHTML = step.body;
+  $('btn-tut-next').textContent = tutStep === steps.length - 1 ? t('tut_go') : t('tut_next');
+  $('tut-dots').innerHTML = steps.map((_, i) => `<span${i === tutStep ? ' class="on"' : ''}></span>`).join('');
+}
+
+function maybeTutorial(mode) {
+  if (Storage.get('tut', false)) return false;
+  tutPendingMode = mode;
+  tutStep = 0;
+  showTutorialCard();
+  show('tutorial');
+  return true;
+}
+
+$('btn-tut-next').addEventListener('click', () => {
+  const steps = t('tut_steps');
+  if (tutStep < steps.length - 1) {
+    tutStep++;
+    showTutorialCard();
+  } else {
+    Storage.set('tut', true);
+    hide('tutorial');
+    startGame(tutPendingMode || 'endless');
+  }
+});
+
+// ---------- Codex: live-rendered mini gallery of all 11 bodies ----------
+let codexBuilt = false;
+function buildCodex() {
+  if (codexBuilt) return;
+  codexBuilt = true;
+  const wrap = $('codex');
+  const names = t('tier_names');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  TIERS.forEach((spec, tier) => {
+    const row = document.createElement('div');
+    row.className = 'codex-row';
+    const c = document.createElement('canvas');
+    const size = 34;
+    c.width = size * dpr; c.height = size * dpr;
+    c.style.width = c.style.height = size + 'px';
+    const cctx = c.getContext('2d');
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const r = 11;
+    const spr = renderer.sprite(tier, r, 0);
+    const dw = spr.canvas.width * (30 / (spr.offset * 2));
+    cctx.drawImage(spr.canvas, (size - dw) / 2, (size - dw) / 2, dw, dw);
+    renderer.drawFace(cctx, size / 2, size / 2, r * (30 / (spr.offset * 2)) * 1.4, 'normal', tier);
+    const label = document.createElement('div');
+    let hint = '';
+    if (spec.id === 'neutron') hint = `<small>${t('codex_neutron')}</small>`;
+    if (spec.id === 'blackhole') hint = `<small>${t('codex_bh')}</small>`;
+    label.innerHTML = `<b>${tier + 1}. ${names[tier]}</b>${hint}`;
+    row.appendChild(c);
+    row.appendChild(label);
+    wrap.appendChild(row);
+  });
+}
+
+$('btn-endless').addEventListener('click', () => { if (!maybeTutorial('endless')) startGame('endless'); });
+$('btn-daily').addEventListener('click', () => { if (!maybeTutorial('daily')) startGame('daily'); });
+$('btn-howto').addEventListener('click', () => { buildCodex(); show('howto'); });
 $('btn-howto-close').addEventListener('click', () => hide('howto'));
 $('btn-settings').addEventListener('click', () => { refreshToggles(); show('settings'); });
 $('btn-settings-close').addEventListener('click', () => hide('settings'));
@@ -499,6 +578,10 @@ $('tgl-music').addEventListener('click', () => {
 $('tgl-haptics').addEventListener('click', () => {
   settings.haptics = !settings.haptics;
   Haptics.enabled = settings.haptics;
+  saveSettings(); refreshToggles();
+});
+$('tgl-badges').addEventListener('click', () => {
+  settings.badges = !settings.badges;
   saveSettings(); refreshToggles();
 });
 
