@@ -236,6 +236,40 @@ html, body {
 .tut-dots span.on { background: var(--accent2); }
 .tut-body { min-height: 120px; text-align: center; }
 
+/* ---------- Cosmetics ---------- */
+.cos-section { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); margin: 14px 0 6px; text-align: left; }
+.cos-list { display: flex; flex-direction: column; gap: 8px; }
+.cos-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #1a1e42;
+  border: 2px solid #2e3468;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.cos-item small { display: block; font-size: 11px; font-weight: 500; color: var(--dim); }
+.cos-item.locked { opacity: 0.55; cursor: default; }
+.cos-item.equipped { border-color: var(--accent2); box-shadow: 0 0 0 1px var(--accent2); }
+.cos-badge {
+  flex: none;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #3a1d05;
+  background: #ff9d3f;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.cos-swatch { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); }
+
 /* ---------- Codex ---------- */
 .codex-title { font-size: 16px; margin-top: 8px; }
 .codex {

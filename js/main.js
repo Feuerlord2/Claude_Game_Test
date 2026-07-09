@@ -12,6 +12,7 @@ import { Ads } from './ads.js';
 import { t } from './i18n.js';
 import { buildShareText, share } from './share.js';
 import * as Daily from './daily.js';
+import * as Cosmetics from './cosmetics.js';
 
 const TEST = new URLSearchParams(location.search).has('test');
 
@@ -41,6 +42,14 @@ Haptics.enabled = settings.haptics;
 Ads.onAdStart = () => audio.suspend();
 Ads.onAdEnd = () => audio.resume();
 
+// Apply equipped cosmetics to the renderer.
+function applyCosmetics() {
+  const eq = Cosmetics.getEquipped();
+  renderer.faceSet = eq.faces;
+  renderer.setTheme(eq.arena === 'default' ? null : Cosmetics.THEMES[eq.arena]);
+  lastNextShown = -1; // re-render the next-piece preview with the new face set
+}
+
 function saveSettings() {
   Storage.set('settings', settings);
 }
@@ -52,6 +61,9 @@ let officialDaily = false;
 let finalizedThisRun = false;
 let dailyRunDay = 0;           // the UTC day this daily run belongs to
 let lastTime = performance.now();
+// Lifetime-stats accounting: a revived run hits game over twice, so only
+// the delta since the last count goes into the books.
+let statsCounted = { games: 0, score: 0, merges: 0, bh: 0 };
 
 // ---------- Static UI text ----------
 function applyStaticText() {
@@ -69,6 +81,11 @@ function applyStaticText() {
   $('lbl-badges').textContent = t('show_badges');
   $('codex-title').textContent = t('codex_title');
   $('btn-settings-close').textContent = t('close');
+  $('btn-cosmetics').textContent = t('cosmetics');
+  $('cosmetics-title').textContent = t('cosmetics_title');
+  $('arena-title').textContent = t('arena_themes');
+  $('faces-title').textContent = t('face_sets');
+  $('btn-cosmetics-close').textContent = t('close');
   $('pause-title').textContent = t('paused');
   $('btn-resume').textContent = t('resume');
   $('btn-quit').textContent = t('quit');
@@ -152,6 +169,7 @@ function startGame(mode) {
     game.reset('endless', Math.floor(Math.random() * 0xffffffff));
   }
   particles.clear();
+  statsCounted = { games: 0, score: 0, merges: 0, bh: 0 };
   hide('menu'); hide('gameover'); hide('pause');
   show('hud');
   updateHudMode();
@@ -236,6 +254,26 @@ function handleGameOver(ev) {
   audio.gameover();
   Haptics.gameover();
 
+  // Lifetime stats + cosmetic unlock detection (delta-guarded for revives).
+  const before = Cosmetics.unlockedIds();
+  Cosmetics.bumpStats({
+    games: statsCounted.games === 0 ? 1 : 0,
+    score: game.score - statsCounted.score,
+    merges: game.merges - statsCounted.merges,
+    bh: game.bhCount - statsCounted.bh,
+    bestTier: game.bestTier,
+  });
+  statsCounted = { games: 1, score: game.score, merges: game.merges, bh: game.bhCount };
+  const after = Cosmetics.unlockedIds();
+  for (const id of after) {
+    if (!before.has(id)) {
+      const [type, value] = id.split(':');
+      const names = t(type === 'arena' ? 'theme_names' : 'faceset_names');
+      toast(t('unlock_toast', names[value]), 4200);
+      break; // one toast is enough — the rest are visible in the Style screen
+    }
+  }
+
   const tierName = t('tier_names')[game.bestTier];
   $('go-score').textContent = game.score.toLocaleString();
   $('go-stats').textContent = t('stats', `${TIERS[game.bestTier].emoji} ${tierName}`, game.merges);
@@ -253,11 +291,12 @@ function handleGameOver(ev) {
 
   // Daily accounting
   if (runMode === 'daily' && officialDaily) {
+    const runExtra = { maxChain: game.maxChain, bhCount: game.bhCount };
     if (!finalizedThisRun) {
-      Daily.finalizeRun(game.score, game.bestTier);
+      Daily.finalizeRun(game.score, game.bestTier, runExtra);
       finalizedThisRun = true;
     } else {
-      Daily.improveScore(game.score, game.bestTier);
+      Daily.improveScore(game.score, game.bestTier, runExtra);
     }
     const state = Daily.getDailyState();
     // Rewarded ladder: one CTA per moment. While the revive is still on the
@@ -356,7 +395,7 @@ function processEvents(events) {
           Storage.set('seen:bh', true);
           toast(t('first_bh'), 4200);
         }
-        if (officialDaily) Daily.recordProgress(game.score, game.bestTier);
+        if (officialDaily) Daily.recordProgress(game.score, game.bestTier, { maxChain: game.maxChain, bhCount: game.bhCount });
         break;
       }
       case 'bh-eat':
@@ -370,7 +409,7 @@ function processEvents(events) {
         particles.spawnText(ev.x, ev.y, `+${ev.points}`, '#ff9a3c');
         renderer.addShake(22);
         audio.bhFinale();
-        if (officialDaily) Daily.recordProgress(game.score, game.bestTier);
+        if (officialDaily) Daily.recordProgress(game.score, game.bestTier, { maxChain: game.maxChain, bhCount: game.bhCount });
         break;
       case 'revive':
         for (const c of ev.cleared) particles.spawnBurst(c.x, c.y, c.tier, 5);
@@ -557,6 +596,43 @@ function buildCodex() {
   });
 }
 
+// ---------- Cosmetics screen ----------
+function buildCosmetics() {
+  const unlocked = Cosmetics.unlockedIds();
+  const eq = Cosmetics.getEquipped();
+  const render = (type, containerId, nameMap) => {
+    const wrap = $(containerId);
+    wrap.innerHTML = '';
+    for (const u of Cosmetics.UNLOCKS.filter((x) => x.type === type)) {
+      const isUnlocked = unlocked.has(u.id);
+      const isEquipped = eq[type] === u.value;
+      const item = document.createElement('button');
+      item.className = 'cos-item' + (isUnlocked ? '' : ' locked') + (isEquipped ? ' equipped' : '');
+      const names = t(nameMap);
+      const label = `<div><b>${names[u.value]}</b>${isUnlocked ? '' : `<small>🔒 ${t('unlock_conds')[u.id] || ''}</small>`}</div>`;
+      let swatch = '';
+      if (type === 'arena') {
+        const th = Cosmetics.THEMES[u.value];
+        swatch = `<span class="cos-swatch" style="background: linear-gradient(135deg, ${th.bgTop}, ${(th.nebulae[0] || {}).color || th.bgBottom})"></span>`;
+      }
+      item.innerHTML = `${swatch}${label}${isEquipped ? `<span class="cos-badge">${t('equipped')}</span>` : ''}`;
+      if (isUnlocked && !isEquipped) {
+        item.addEventListener('click', () => {
+          Cosmetics.equip(type, u.value);
+          applyCosmetics();
+          buildCosmetics();
+        });
+      }
+      wrap.appendChild(item);
+    }
+  };
+  render('arena', 'cos-arena', 'theme_names');
+  render('faces', 'cos-faces', 'faceset_names');
+}
+
+$('btn-cosmetics').addEventListener('click', () => { buildCosmetics(); show('cosmetics'); });
+$('btn-cosmetics-close').addEventListener('click', () => hide('cosmetics'));
+
 $('btn-endless').addEventListener('click', () => { if (!maybeTutorial('endless')) startGame('endless'); });
 $('btn-daily').addEventListener('click', () => { if (!maybeTutorial('daily')) startGame('daily'); });
 $('btn-howto').addEventListener('click', () => { buildCodex(); show('howto'); });
@@ -646,7 +722,7 @@ $('btn-share').addEventListener('click', async () => {
   // Always share the RAW score — an ad-doubled number would silently break
   // the comparability that makes shared daily scores worth anything.
   const shareScore = state.rawScore ?? state.score;
-  const text = buildShareText(state.day, shareScore, state.bestTier, streak.count);
+  const text = buildShareText(state.day, shareScore, state.bestTier, streak.count, { maxChain: state.maxChain || 0, bhCount: state.bhCount || 0 });
   if (TEST) window.__sd.lastShareText = text;
   const result = await share(text);
   if (result === 'copied') toast(t('shared'));
@@ -699,6 +775,7 @@ if ('serviceWorker' in navigator && !TEST && location.protocol !== 'file:') {
 // ---------- Boot ----------
 applyStaticText();
 refreshToggles();
+applyCosmetics();
 Daily.reconcileAbandonedRun();
 Ads.init();
 showMenu();

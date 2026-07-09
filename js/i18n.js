@@ -32,6 +32,21 @@ const STRINGS = {
     first_neutron: '🌟 Neutron star! Small but heavy — you just freed space.',
     first_bh: '⚫ BLACK HOLE! It devours everything nearby…',
     show_badges: 'Tier numbers',
+    cosmetics: 'Style',
+    cosmetics_title: 'Cosmic style',
+    arena_themes: 'Arena themes',
+    face_sets: 'Face sets',
+    equipped: 'ON',
+    unlock_toast: (name) => `🎨 Unlocked: ${name}!`,
+    theme_names: { default: 'Deep Space', aurora: 'Aurora', crimson: 'Crimson Nebula', golden: 'Golden Dawn' },
+    faceset_names: { default: 'Classic', cool: 'Cool Shades', starry: 'Starry Eyes' },
+    unlock_conds: {
+      'arena:aurora': '100 total merges',
+      'arena:crimson': 'birth a black hole',
+      'arena:golden': 'reach a 7-day streak',
+      'faces:cool': 'play 10 games',
+      'faces:starry': '25,000 total points',
+    },
     sound: 'Sound',
     music: 'Music',
     haptics: 'Vibration',
@@ -64,8 +79,9 @@ const STRINGS = {
     mode_practice: 'Practice',
     ad_stub: 'Ad placeholder — portal SDK plugs in here',
     tier_names: ['Stardust', 'Meteoroid', 'Asteroid', 'Comet', 'Moon', 'Planet', 'Gas Giant', 'Star', 'Red Giant', 'Neutron Star', 'Black Hole'],
-    share_text: (n, score, emoji, tierName, tierIdx, streak, url, grid) =>
+    share_text: (n, score, emoji, tierName, tierIdx, streak, url, grid, dna) =>
       `Singularity Drop #${n}\n${grid}\n${emoji} ${score.toLocaleString('en-US')} pts · ${tierName} (${tierIdx + 1}/11)` +
+      (dna ? `\n${dna}` : '') +
       (streak > 1 ? `\n🔥 ${streak}-day streak` : '') + `\n${url}`,
   },
   de: {
@@ -99,6 +115,21 @@ const STRINGS = {
     first_neutron: '🌟 Neutronenstern! Klein, aber schwer — du hast gerade Platz geschaffen.',
     first_bh: '⚫ SCHWARZES LOCH! Es frisst alles in der Nähe…',
     show_badges: 'Tier-Nummern',
+    cosmetics: 'Style',
+    cosmetics_title: 'Kosmischer Style',
+    arena_themes: 'Arena-Themes',
+    face_sets: 'Gesichter',
+    equipped: 'AN',
+    unlock_toast: (name) => `🎨 Freigeschaltet: ${name}!`,
+    theme_names: { default: 'Deep Space', aurora: 'Aurora', crimson: 'Purpurnebel', golden: 'Goldene Dämmerung' },
+    faceset_names: { default: 'Klassisch', cool: 'Coole Brille', starry: 'Sternenaugen' },
+    unlock_conds: {
+      'arena:aurora': '100 Merges gesamt',
+      'arena:crimson': 'Erschaffe ein Schwarzes Loch',
+      'arena:golden': 'Erreiche eine 7-Tage-Serie',
+      'faces:cool': 'Spiele 10 Runden',
+      'faces:starry': '25.000 Punkte gesamt',
+    },
     sound: 'Sound',
     music: 'Musik',
     haptics: 'Vibration',
@@ -131,8 +162,9 @@ const STRINGS = {
     mode_practice: 'Übung',
     ad_stub: 'Werbe-Platzhalter — hier dockt das Portal-SDK an',
     tier_names: ['Sternenstaub', 'Meteoroid', 'Asteroid', 'Komet', 'Mond', 'Planet', 'Gasriese', 'Stern', 'Roter Riese', 'Neutronenstern', 'Schwarzes Loch'],
-    share_text: (n, score, emoji, tierName, tierIdx, streak, url, grid) =>
+    share_text: (n, score, emoji, tierName, tierIdx, streak, url, grid, dna) =>
       `Singularity Drop #${n}\n${grid}\n${emoji} ${score.toLocaleString('de-DE')} Pkt. · ${tierName} (${tierIdx + 1}/11)` +
+      (dna ? `\n${dna}` : '') +
       (streak > 1 ? `\n🔥 Serie: ${streak} Tage` : '') + `\n${url}`, // share only for streak>1, always plural
   },
 };

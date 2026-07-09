@@ -44,7 +44,15 @@ export class Renderer {
     this.shake = 0;
     this.time = 0;
     this.motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    // Cosmetics (set by main from the equipped state)
+    this.theme = null;      // background palette object; null = built-in default
+    this.faceSet = 'default';
     this.resize();
+  }
+
+  setTheme(theme) {
+    this.theme = theme;
+    this.renderBackground();
   }
 
   reduced() { return this.motionQuery ? this.motionQuery.matches : false; }
@@ -112,19 +120,22 @@ export class Renderer {
     // Keep local aliases so the existing paint code below works unchanged.
     const paintW = bw, paintH = bh;
 
+    const theme = this.theme || {
+      bgTop: '#080a1a', bgBottom: '#04050d',
+      nebulae: [
+        { x: 0.2, y: 0.24, r: 0.55, color: 'rgba(88, 60, 168, 0.18)' },
+        { x: 0.86, y: 0.7, r: 0.6, color: 'rgba(168, 78, 96, 0.12)' },
+        { x: 0.62, y: 0.12, r: 0.42, color: 'rgba(44, 96, 156, 0.13)' },
+        { x: 0.1, y: 0.85, r: 0.4, color: 'rgba(52, 120, 130, 0.08)' },
+      ],
+    };
     const bg = ctx.createLinearGradient(0, 0, 0, paintH);
-    bg.addColorStop(0, '#080a1a');
-    bg.addColorStop(1, '#04050d');
+    bg.addColorStop(0, theme.bgTop);
+    bg.addColorStop(1, theme.bgBottom);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, paintW, paintH);
 
-    const nebulae = [
-      { x: 0.2, y: 0.24, r: 0.55, color: 'rgba(88, 60, 168, 0.18)' },
-      { x: 0.86, y: 0.7, r: 0.6, color: 'rgba(168, 78, 96, 0.12)' },
-      { x: 0.62, y: 0.12, r: 0.42, color: 'rgba(44, 96, 156, 0.13)' },
-      { x: 0.1, y: 0.85, r: 0.4, color: 'rgba(52, 120, 130, 0.08)' },
-    ];
-    for (const n of nebulae) {
+    for (const n of theme.nebulae) {
       const g = ctx.createRadialGradient(
         n.x * paintW, n.y * paintH, 0,
         n.x * paintW, n.y * paintH, n.r * Math.max(paintW, paintH)
@@ -729,6 +740,42 @@ export class Renderer {
     if (state === 'eaten') { this.faceEaten(ctx, R, er, ex, ey, dark); ctx.restore(); return; }
     if (state === 'panic') { this.facePanic(ctx, R, er, ex, ey, dark); ctx.restore(); return; }
     if (state === 'happy') { this.faceHappy(ctx, R, er, ex, ey, dark); ctx.restore(); return; }
+    // Equipped face set restyles only the RESTING states — emotional states
+    // (panic/happy/eaten) keep their canonical, readable expressions.
+    if (this.faceSet === 'cool') {
+      // sunglasses bar with a glint + smile
+      ctx.fillStyle = dark;
+      const gw = ex + er * 1.3;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-gw, ey - er * 0.8, gw * 2, er * 1.6, er * 0.5);
+      else ctx.rect(-gw, ey - er * 0.8, gw * 2, er * 1.6);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath(); ctx.arc(-ex + er * 0.3, ey - er * 0.25, er * 0.22, 0, TAU); ctx.fill();
+      this.drawSmile(ctx, R, dark);
+      ctx.restore(); return;
+    }
+    if (this.faceSet === 'starry' && state !== 'blink') {
+      for (const s of [-1, 1]) {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(s * ex, ey, er * 0.95, 0, TAU); ctx.fill();
+        ctx.strokeStyle = dark; ctx.lineWidth = Math.max(1, R * 0.04); ctx.stroke();
+        // 4-point star pupil
+        ctx.fillStyle = dark;
+        ctx.save(); ctx.translate(s * ex, ey);
+        ctx.beginPath();
+        for (let k = 0; k < 4; k++) {
+          const a = k * Math.PI / 2;
+          ctx.lineTo(Math.cos(a) * er * 0.62, Math.sin(a) * er * 0.62);
+          ctx.lineTo(Math.cos(a + Math.PI / 4) * er * 0.2, Math.sin(a + Math.PI / 4) * er * 0.2);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      this.drawSmile(ctx, R, dark);
+      ctx.restore(); return;
+    }
+
     if (state === 'blink') {
       ctx.strokeStyle = dark; ctx.lineWidth = Math.max(1.2, R * 0.07); ctx.lineCap = 'round';
       for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * ex - er * 0.8, ey); ctx.lineTo(s * ex + er * 0.8, ey); ctx.stroke(); }

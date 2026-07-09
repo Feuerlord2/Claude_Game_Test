@@ -529,6 +529,68 @@ try {
     await ctx.close();
   }
 
+  // ---------------- 11c. Cosmetics & run-DNA share ----------------
+  {
+    console.log('cosmetics & run-DNA');
+    const ctx = await mobileContext();
+    const page = await newPage(ctx);
+
+    // Locked by default: only the two defaults are equippable.
+    await page.click('#btn-cosmetics');
+    let counts = await page.evaluate(() => ({
+      total: document.querySelectorAll('.cos-item').length,
+      locked: document.querySelectorAll('.cos-item.locked').length,
+    }));
+    ok('cosmetics lists all 7 items', counts.total === 7, JSON.stringify(counts));
+    ok('5 items locked on a fresh profile', counts.locked === 5, JSON.stringify(counts));
+
+    // Grant stats that unlock aurora (100 merges) + cool (10 games), re-open.
+    await page.evaluate(() => {
+      localStorage.setItem('sd1:stats', JSON.stringify({ games: 10, merges: 150, score: 500, bh: 0, bestTier: 6 }));
+    });
+    await page.click('#btn-cosmetics-close');
+    await page.click('#btn-cosmetics');
+    counts = await page.evaluate(() => ({
+      locked: document.querySelectorAll('.cos-item.locked').length,
+    }));
+    ok('stats unlock aurora + cool shades', counts.locked === 3, JSON.stringify(counts));
+
+    // Equip aurora — persists and survives reload.
+    await page.evaluate(() => {
+      [...document.querySelectorAll('#cos-arena .cos-item')]
+        .find((el) => !el.classList.contains('locked') && !el.classList.contains('equipped'))
+        .click();
+    });
+    const eq = await page.evaluate(() => JSON.parse(localStorage.getItem('sd1:equipped')));
+    ok('equipping persists', eq && eq.arena === 'aurora', JSON.stringify(eq));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForFunction(() => window.__sd !== undefined);
+    const themed = await page.evaluate(() => window.__sd.renderer.theme !== null);
+    ok('equipped theme applied after reload', themed);
+
+    // Run-DNA reaches the share text (chains always happen in an overfill run).
+    await page.evaluate((ts) => {
+      const sd = window.__sd;
+      sd.setNow(ts);
+      sd.startGame('daily');
+      for (let i = 0; i < 250 && !sd.state().over; i++) {
+        sd.drop((i % 10) * (Math.PI / 5));
+        sd.stepFrames(55);
+      }
+    }, FAKE_NOW);
+    const dna = await page.evaluate(() => {
+      const st = window.__sd.daily.getDailyState();
+      return { maxChain: st.maxChain, bhCount: st.bhCount };
+    });
+    ok('run-DNA recorded in daily state', dna.maxChain >= 2, JSON.stringify(dna));
+    await page.click('#btn-share');
+    await page.waitForTimeout(300);
+    const text = await page.evaluate(() => window.__sd.lastShareText);
+    ok('share text carries the chain DNA', text.includes(`⛓️×${dna.maxChain}`), text);
+    ok('no console errors', page.errors.length === 0, page.errors.join('; '));
+    await ctx.close();
+  }
+
   // ---------------- 12. Performance ----------------
   {
     console.log('performance');

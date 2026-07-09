@@ -1,7 +1,7 @@
 // Cache-first service worker: the whole game works offline after first load.
 // Bump CACHE_VERSION on every deploy to invalidate old caches.
 
-const CACHE_VERSION = 'sd-v1.4.0';
+const CACHE_VERSION = 'sd-v1.5.0';
 
 const ASSETS = [
   './',
@@ -17,6 +17,7 @@ const ASSETS = [
   './js/haptics.js',
   './js/storage.js',
   './js/daily.js',
+  './js/cosmetics.js',
   './js/i18n.js',
   './js/share.js',
   './js/ads.js',

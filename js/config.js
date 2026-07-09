@@ -1,6 +1,6 @@
 // All tuning constants live here. World units: arena radius = 100.
 
-export const VERSION = '1.4.0';
+export const VERSION = '1.5.0';
 
 export const WORLD = {
   R: 100,            // arena radius (launcher orbit)

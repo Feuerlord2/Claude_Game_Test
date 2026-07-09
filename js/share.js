@@ -4,16 +4,22 @@
 import { TIERS } from './config.js';
 import { t } from './i18n.js';
 
-export function buildShareText(dayNumber, score, bestTier, streak) {
+export function buildShareText(dayNumber, score, bestTier, streak, extra = {}) {
   const clamped = Math.max(0, Math.min(bestTier, TIERS.length - 1));
   const tier = TIERS[clamped];
   const tierName = t('tier_names')[clamped] || t('tier_names')[0];
   const url = shareUrl();
   // The Wordle trick: a glanceable emoji progress row that reads in a feed
-  // before a single word — reached tiers filled, the rest dark.
+  // before a single word — reached tiers filled, the rest dark. A 💥 marks
+  // an ignited black hole.
   const grid = TIERS.slice(0, clamped + 1).map((x) => x.emoji).join('')
-    + '⬛'.repeat(TIERS.length - 1 - clamped);
-  return t('share_text', dayNumber, score, tier.emoji, tierName, clamped, streak, url, grid);
+    + '⬛'.repeat(TIERS.length - 1 - clamped)
+    + (extra.bhCount > 0 ? '💥' : '');
+  // Run DNA: the SHAPE of the run, so two equal scores don't look identical.
+  const dna = [];
+  if ((extra.maxChain || 0) >= 2) dna.push(`⛓️×${extra.maxChain}`);
+  if ((extra.bhCount || 0) > 0) dna.push(`⚫💥×${extra.bhCount}`);
+  return t('share_text', dayNumber, score, tier.emoji, tierName, clamped, streak, url, grid, dna.join(' · '));
 }
 
 export function shareUrl() {

@@ -43,15 +43,19 @@ export function hasPlayedToday() {
 }
 
 export function startOfficialRun(day = dayNumber()) {
-  Storage.set('daily', { day, status: 'inprogress', score: 0, bestTier: 0, doubled: false });
+  Storage.set('daily', { day, status: 'inprogress', score: 0, bestTier: 0, doubled: false, maxChain: 0, bhCount: 0 });
 }
 
 // Called during an official run so an abandoned run still counts.
-export function recordProgress(score, bestTier) {
+export function recordProgress(score, bestTier, extra) {
   const s = getDailyState();
   if (!s || s.status !== 'inprogress') return;
   s.score = score;
   s.bestTier = bestTier;
+  if (extra) {
+    s.maxChain = Math.max(s.maxChain || 0, extra.maxChain || 0);
+    s.bhCount = Math.max(s.bhCount || 0, extra.bhCount || 0);
+  }
   Storage.set('daily', s);
 }
 
@@ -85,17 +89,21 @@ function updateStreakForDay(day) {
 // A run that crosses UTC midnight is credited to the day it STARTED on
 // (matching reconcileAbandonedRun), so the streak holds and the new day's
 // attempt stays available.
-export function finalizeRun(score, bestTier) {
+export function finalizeRun(score, bestTier, extra) {
   let s = Storage.get('daily');
   if (s && s.status === 'done' && s.day === dayNumber()) {
     return { state: s, streak: getStreak() }; // already counted today
   }
   if (!s || s.status !== 'inprogress') {
-    s = { day: dayNumber(), status: 'inprogress', score: 0, bestTier: 0, doubled: false };
+    s = { day: dayNumber(), status: 'inprogress', score: 0, bestTier: 0, doubled: false, maxChain: 0, bhCount: 0 };
   }
   s.status = 'done';
   s.score = Math.max(s.score, score);
   s.bestTier = Math.max(s.bestTier, bestTier);
+  if (extra) {
+    s.maxChain = Math.max(s.maxChain || 0, extra.maxChain || 0);
+    s.bhCount = Math.max(s.bhCount || 0, extra.bhCount || 0);
+  }
   Storage.set('daily', s);
   return { state: s, streak: updateStreakForDay(s.day) };
 }
@@ -115,9 +123,13 @@ export function reconcileAbandonedRun() {
 // After a rewarded revive the run continues past the first finalize —
 // let a better final result raise today's recorded score. Works after a
 // 2x double too, by comparing against the raw (undoubled) score.
-export function improveScore(score, bestTier) {
+export function improveScore(score, bestTier, extra) {
   const s = getDailyState();
   if (!s || s.status !== 'done') return;
+  if (extra) {
+    s.maxChain = Math.max(s.maxChain || 0, extra.maxChain || 0);
+    s.bhCount = Math.max(s.bhCount || 0, extra.bhCount || 0);
+  }
   const raw = s.doubled ? (s.rawScore ?? Math.floor(s.score / 2)) : s.score;
   if (score > raw || bestTier > s.bestTier) {
     const newRaw = Math.max(raw, score);
@@ -128,8 +140,8 @@ export function improveScore(score, bestTier) {
       s.score = newRaw;
     }
     s.bestTier = Math.max(s.bestTier, bestTier);
-    Storage.set('daily', s);
   }
+  Storage.set('daily', s); // persist run-DNA extras even without a score gain
 }
 
 export function applyDouble() {

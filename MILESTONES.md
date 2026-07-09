@@ -112,5 +112,10 @@ perfekte Kreis, nur andere Farbe). Phase 1 löst „alles rund" + „gestempelt"
       gerenderte Sprites), Tier-Nummern-Badges als Accessibility-Setting,
       Parallax-Starfield-Drift, dekorative Orbit-Ringe auf breiten Screens —
       87/87 E2E-Checks
-- [ ] Phase 3: Kosmetische Meta-Progression, Share-Grid-Redesign
+- [x] Phase 3 (v1.5.0): Kosmetik-Meta-Progression — 4 Arena-Themes + 3
+      Gesichts-Sets, freigeschaltet über Lifetime-Stats (Merges, Runden,
+      Punkte, Schwarze Löcher) und Streak-Meilensteine, serverlos; Unlock-
+      Toast nach dem Run; Style-Screen im Menü. Share-Grid kodiert jetzt die
+      Run-DNA: ⛓️×Max-Kette, ⚫💥×Zündungen, 💥 im Tier-Grid — zwei gleiche
+      Scores sehen nicht mehr identisch aus. 95/95 E2E-Checks.
 - [ ] Phase 4: Gravitations-Puls, Modifikatoren, Freundes-Duell

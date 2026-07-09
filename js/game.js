@@ -19,6 +19,8 @@ export class Game {
     this.score = 0;
     this.merges = 0;
     this.bestTier = 0;
+    this.maxChain = 0;   // run DNA for the share text
+    this.bhCount = 0;    // black holes ignited this run
     this.chain = 0;
     this.chainTimer = 0;
     this.time = 0;
@@ -130,6 +132,7 @@ export class Game {
     this.physics.add(nb);
 
     this.chain++;
+    if (this.chain > this.maxChain) this.maxChain = this.chain;
     this.chainTimer = RULES.CHAIN_WINDOW;
     const points = Math.round(spec.score * this.chainMult());
     this.score += points;
@@ -139,6 +142,7 @@ export class Game {
     if (t === BLACKHOLE_TIER) {
       nb.bhBirth = this.time;
       nb.bhFed = 0;
+      this.bhCount++;
     }
 
     this.events.push({ type: 'merge', tier: t, x, y, points, chain: this.chain });
